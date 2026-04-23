@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { fetchPopularMovies, fetchNowPlayingMovies, fetchTopRatedMovies } from "./lib/tmdn";
 
 export default function Home() {
   const [dragState, setDragState] = useState({
