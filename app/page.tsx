@@ -1,6 +1,38 @@
+"use client";
+
 import Image from "next/image";
+import { useRef, useState } from "react";
 
 export default function Home() {
+  const [dragState, setDragState] = useState({
+    isDragging: false,
+    startX: 0,
+    scrollLeft: 0,
+  });
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    setDragState({
+      isDragging: true,
+      startX: e.pageX - container.offsetLeft,
+      scrollLeft: container.scrollLeft,
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragState.isDragging) return;
+    
+    e.preventDefault();
+    const container = e.currentTarget;
+    const x = e.pageX - container.offsetLeft;
+    const walk = (x - dragState.startX) * 1;
+    container.scrollLeft = dragState.scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    setDragState({ ...dragState, isDragging: false });
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
@@ -11,15 +43,16 @@ export default function Home() {
             alt="WatchBuddy Logo"
             width={120}
             height={40}
+            draggable={false}
             className="dark:invert"
             style={{height:"auto"}}
           />
         </div>
         <nav className="flex space-x-6">
           <a href="#" className="hover:text-gray-300">Home</a>
-          <a href="#" className="hover:text-gray-300">TV Shows</a>
-          <a href="#" className="hover:text-gray-300">Movies</a>
-          <a href="#" className="hover:text-gray-300">My List</a>
+          <a href="#continue-watching" className="hover:text-gray-300">Continue Watching</a>
+          <a href="#trending" className="hover:text-gray-300">Trending Now</a>
+          <a href="#popular-with-friends" className="hover:text-gray-300">Popular with Friends</a>
         </nav>
       </header>
 
@@ -37,33 +70,47 @@ export default function Home() {
       </section>
 
       {/* Content Rows */}
-      <section className="py-8 px-4">
-        <h2 className="text-2xl font-bold mb-4">Trending Now</h2>
-        <div className="flex space-x-4 overflow-x-scroll pb-4">
+      <section id="continue-watching" className="py-8 px-4">
+        <h2 className="text-2xl font-bold mb-4">Continue watching</h2>
+        <div 
+          className="flex space-x-4 overflow-x-scroll pb-4 cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
           {Array.from({length: 10}, (_, i) => (
-          <div key={i} className="relative flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden">
+          <div key={i} className="relative flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden hover:scale-110 transition-transform duration-300">
             <Image
               src={`https://picsum.photos/200/300?random=${i}`}
               alt={`Movie ${i+1}`}
-              fill
-              sizes="(max-width: 768px) 50vw, 192px"
-              className="object-cover"
+              width={200}
+              height={300}
+              draggable={false}
+              className="w-full h-full object-cover "
             />
           </div>
           ))}
         </div>
       </section>
 
-      <section className="py-8 px-4">
-        <h2 className="text-2xl font-bold mb-4">Top Rated</h2>
-        <div className="flex space-x-4 overflow-x-scroll pb-4">
+      <section id="trending" className="py-8 px-4">
+        <h2 className="text-2xl font-bold mb-4">Trending Now</h2>
+        <div 
+          className="flex space-x-4 overflow-x-scroll pb-4 cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
           {Array.from({length: 10}, (_, i) => (
-            <div key={i} className="flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden">
+            <div key={i} className="flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden hover:scale-110 transition-transform duration-300">
               <Image
                 src={`https://picsum.photos/200/300?random=${i+10}`}
                 alt={`Movie ${i+11}`}
                 width={200}
                 height={300}
+                draggable={false}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -71,16 +118,23 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-8 px-4">
-        <h2 className="text-2xl font-bold mb-4">Action Movies</h2>
-        <div className="flex space-x-4 overflow-x-scroll pb-4">
+      <section id="popular-with-friends" className="py-8 px-4">
+        <h2 className="text-2xl font-bold mb-4">Popular with Friends</h2>
+        <div 
+          className="flex space-x-4 overflow-x-scroll pb-4 cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
           {Array.from({length: 10}, (_, i) => (
-            <div key={i} className="flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden">
+            <div key={i} className="flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden hover:scale-110 transition-transform duration-300 ">
               <Image
                 src={`https://picsum.photos/200/300?random=${i+20}`}
                 alt={`Movie ${i+21}`}
                 width={200}
                 height={300}
+                draggable={false}
                 className="w-full h-full object-cover"
               />
             </div>
