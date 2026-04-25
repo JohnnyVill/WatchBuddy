@@ -9,22 +9,22 @@ const options = {
     }
 }
 
-export async function fetchTmdbMovies(endpoint: string) {
+export async function fetchTmdbMovies(endpoint: string, page = 1) {
     try {
-        const response = await fetch(`${TMDB_BASE_URL}/${endpoint}`, options)
-        console.log("TMDB API Key:", TMDB_API_KEY)
+        const response = await fetch(`${TMDB_BASE_URL}/${endpoint}?language=en-US&page=${page}`, options)
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
-        console.log(`Fetched ${endpoint}:`, data)
+        console.log(`Fetched ${endpoint} page ${page}:`, data)
         return data.results
     } catch (error) {
-        console.error(`Error fetching ${endpoint}:`, error)
+        console.error(`Error fetching ${endpoint} page ${page}:`, error)
+        return []
     }
 }
-export function fetchPopularMovies() {
-    return fetchTmdbMovies("movie/popular")
+export function fetchPopularMovies(page?: number) {
+    return fetchTmdbMovies("movie/popular", page)
 }
 
 export function fetchTopRatedMovies() {

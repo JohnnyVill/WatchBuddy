@@ -1,14 +1,10 @@
-import { fetchPopularMovies, fetchTopRatedMovies, fetchNowPlayingMovies } from "./lib/tmdn" ;
+import {fetchMovieData} from "./lib/api/movies" ;
 import Home from "./components/homeUI";
 export default async function Movies() {
-    const popularMovies = await fetchPopularMovies()
-    const topRatedMovies = await fetchTopRatedMovies()
-    const nowPlayingMovies = await fetchNowPlayingMovies()
+    const data = await fetchMovieData()
     return (
         <Home 
-        popularMovies={popularMovies} 
-        topRatedMovies={topRatedMovies} 
-        nowPlayingMovies={nowPlayingMovies} 
+        {...data}
         />
     )
 }
