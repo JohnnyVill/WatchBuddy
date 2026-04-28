@@ -1,0 +1,50 @@
+# Infinite Scroll Feature Documentation
+
+## Overview
+The infinite scroll feature has been added to the WatchBuddy app to enhance the user experience by allowing continuous browsing of movie lists without manual pagination. This feature dynamically loads more movies as the user scrolls near the end of each horizontal row.
+
+## Features Added
+
+### 1. Client-Side State Management in Home Component (`app/components/homeUI.tsx`)
+- **What**: Converted the Home component to a client component with state for each movie category (popular, top_rated, now_playing).
+- **How it works**: 
+  - Maintains separate state for movies, current page, loading status, and whether more movies are available for each category.
+  - Uses `useState` hooks to track these values.
+  - On scroll, checks if the user is near the end of the row (within 320px) and triggers a fetch for the next page.
+  - Appends new movies to the existing list and updates the page number.
+- **Why**: Enables dynamic loading without page refreshes, improving performance and user engagement by keeping users immersed in browsing.
+
+### 2. Updated TMDB API Helper (`app/lib/tmdb.ts`)
+- **What**: Modified `fetchTmdbMovies` to accept an optional `page` parameter.
+- **How it works**: 
+  - The function now constructs the API URL with the specified page number (defaults to 1).
+  - Returns an empty array on error to prevent crashes.
+- **Why**: Supports pagination for infinite scroll, allowing the app to fetch subsequent pages of movies from TMDB.
+
+### 3. New API Route (`app/api/movies/route.ts`)
+- **What**: Added a new Next.js API route at `/api/movies` to proxy TMDB requests.
+- **How it works**: 
+  - Accepts query parameters `category` (e.g., 'popular') and `page` (e.g., 2).
+  - Maps the category to the appropriate TMDB endpoint.
+  - Fetches and returns the results as JSON.
+- **Why**: Provides a server-side endpoint for client-side fetches, ensuring API keys remain secure and allowing for potential caching or rate limiting in the future.
+
+## How the Infinite Scroll Works
+1. **Initial Load**: Movies are fetched server-side on page load and passed as props.
+2. **User Interaction**: As the user scrolls horizontally near the end of a row, the `handleScroll` function detects this.
+3. **Fetch Trigger**: If not already loading and more movies are available, it calls `fetchMoreMovies`.
+4. **API Call**: The client fetches from `/api/movies` with the category and next page.
+5. **Update UI**: New movies are appended to the list, and a loading indicator is shown during the fetch.
+6. **End Detection**: If no more movies are returned, `hasMore` is set to false, stopping further fetches.
+
+## Why Infinite Scroll Was Added
+- **Improved UX**: Reduces friction by eliminating the need for "Load More" buttons or pagination controls.
+- **Performance**: Loads content on-demand, reducing initial page load time.
+- **Engagement**: Encourages users to explore more content seamlessly.
+- **Scalability**: Easily handles large datasets without overwhelming the UI initially.
+
+## Technical Notes
+- The scroll threshold (320px) can be adjusted for sensitivity.
+- Error handling prevents UI breakage if API calls fail.
+- Preserves existing drag-to-scroll functionality.
+- Compatible with Next.js 16 and React 19.

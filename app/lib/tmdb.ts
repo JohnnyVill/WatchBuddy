@@ -34,3 +34,18 @@ export function fetchTopRatedMovies() {
 export function fetchNowPlayingMovies() {
     return fetchTmdbMovies("movie/now_playing")
 }
+
+export async function fetchMovieDetails(movieId: string) {
+    try {
+        const response = await fetch(`${TMDB_BASE_URL}/movie/${movieId}?language=en-US`, options)
+        if(!response.ok) {
+            throw new Error(`Http error! status: ${response.status}`)
+        }
+        const data = await response.json()
+        console.log(`Fetched details for movie ${movieId}:`, data)
+        return data
+    } catch (error) {
+        console.error(`Error fetching details for movie ${movieId}:`, error)
+        return null
+    }
+}
