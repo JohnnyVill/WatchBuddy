@@ -105,8 +105,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
     if(dragState.hasMoved){
       return;
     }
-    console.log("Movie clicked!",movie, movie.id);
-    // TODO: Navigate to movie details page
+    // Navigate to movie details page
     router.push(`/movies/${movie.id}`);
   };
 

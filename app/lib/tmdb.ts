@@ -16,10 +16,10 @@ export async function fetchTmdbMovies(endpoint: string, page = 1) {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
-        console.log(`Fetched ${endpoint} page ${page}:`, data)
+        //console.log(`Fetched ${endpoint} page ${page}:`, data)
         return data.results
     } catch (error) {
-        console.error(`Error fetching ${endpoint} page ${page}:`, error)
+        //console.error(`Error fetching ${endpoint} page ${page}:`, error)
         return []
     }
 }
@@ -42,10 +42,25 @@ export async function fetchMovieDetails(movieId: string) {
             throw new Error(`Http error! status: ${response.status}`)
         }
         const data = await response.json()
-        console.log(`Fetched details for movie ${movieId}:`, data)
+        //console.log(`Fetched details for movie ${movieId}:`, data)
         return data
     } catch (error) {
-        console.error(`Error fetching details for movie ${movieId}:`, error)
+        //console.error(`Error fetching details for movie ${movieId}:`, error)
         return null
+    }
+}
+
+export async function fetchMovieTrailers(movieId: string) {
+    try {
+        const response = await fetch(`${TMDB_BASE_URL}/movie/${movieId}/videos?language=en-US`, options)
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data = await response.json()
+        //console.log(`Fetched trailers for movie ${movieId}:`, data)
+        return data.results
+    } catch (error) {
+        //console.error(`Error fetching trailers for movie ${movieId}:`, error)
+        return []
     }
 }
