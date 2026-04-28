@@ -10,7 +10,12 @@ type HomeProps = {
 };
 
 export default function Home({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying }: HomeProps) {
-
+  const scrollToSection = (id: string) => {
+  document.getElementById(id)?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+};
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -27,23 +32,27 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
           />
         </div>
         <nav className="flex space-x-6">
-          <a href="#" className="hover:text-gray-300">
+          <button onClick={() => scrollToSection("home")} className="hover:text-gray-300">
             Home
-          </a>
-          <a href="#popular" className="hover:text-gray-300">
-            Continue Watching
-          </a>
-          <a href="#top_rated" className="hover:text-gray-300">
-            Trending Now
-          </a>
-          <a href="#now_playing" className="hover:text-gray-300">
-            Popular with Friends
-          </a>
+          </button>
+
+          <button onClick={() => scrollToSection("popular")} className="hover:text-gray-300">
+            Popular
+          </button>
+
+          <button onClick={() => scrollToSection("top_rated")} className="hover:text-gray-300">
+            Top Rated
+          </button>
+
+          <button onClick={() => scrollToSection("now_playing")} className="hover:text-gray-300">
+            Now Playing
+          </button>
         </nav>
       </header>
-
+    
       <section className="relative h-screen flex items-center justify-center bg-gradient-to-r from-black via-transparent to-black">
         <div
+         id="home"
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage:
@@ -54,8 +63,8 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
           <h1 className="text-5xl font-bold mb-4">WatchBuddy</h1>
           <p className="text-xl mb-8">Discover your next favorite movie or TV show</p>
           <div className="flex space-x-4 justify-center">
-            <button className="bg-red-600 hover:bg-red-700 px-8 py-3 rounded font-semibold">Play</button>
-            <button className="bg-gray-600 hover:bg-gray-700 px-8 py-3 rounded font-semibold">More Info</button>
+            {/* <button className="bg-red-600 hover:bg-red-700 px-8 py-3 rounded font-semibold">Play</button>
+            <button className="bg-gray-600 hover:bg-gray-700 px-8 py-3 rounded font-semibold">More Info</button> */}
           </div>
         </div>
       </section>

@@ -64,3 +64,18 @@ export async function fetchMovieTrailers(movieId: string) {
         return []
     }
 }
+
+export async function fetchWhereToWatch(movieId: string) {
+    try {
+        const response = await fetch(`${TMDB_BASE_URL}/movie/${movieId}/watch/providers`, options);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        //console.log(`Fetched watch providers for movie ${movieId}:`, data);
+        return data.results.US || null; // Return US providers or null if not available
+    } catch (error) {
+        //console.error(`Error fetching watch providers for movie ${movieId}:`, error);
+        return null;
+    }
+}   

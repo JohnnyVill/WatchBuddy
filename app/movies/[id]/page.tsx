@@ -1,13 +1,14 @@
-import { fetchMovieDetails, fetchMovieTrailers } from "@/app/lib/tmdb";
+import WatchProviders from "@/app/components/watchProviders";
+import { fetchMovieDetails, fetchMovieTrailers} from "@/app/lib/tmdb";
 import Image from "next/image";
 
 export default async function MovieDetailsPage({params}: {params: {id: string}}){
     const movieDetails = await params;
-   
     const movie = await fetchMovieDetails(movieDetails.id);
     const trailers = await fetchMovieTrailers(movieDetails.id);
     const hasTrailers = trailers.filter((trailer: any) => trailer.official && trailer.site === "YouTube" && trailer.type === "Trailer").length > 0? true : false;
 
+      
 
     if (!movie) {
         return (
@@ -46,7 +47,7 @@ export default async function MovieDetailsPage({params}: {params: {id: string}})
                                 <strong>Release Date:</strong> {movie.release_date}
                             </div>
                             <div>
-                                <strong>Rating:</strong> {movie.vote_average}/10
+                                <strong>Rating:</strong> {Math.round(movie.vote_average * 10) / 10}/10
                             </div>
                             <div>
                                 <strong>Runtime:</strong> {movie.runtime} minutes
@@ -54,6 +55,7 @@ export default async function MovieDetailsPage({params}: {params: {id: string}})
                             <div>
                                 <strong>Genres:</strong> {movie.genres?.map((g: any) => g.name).join(", ")}
                             </div>
+                            <WatchProviders params={movieDetails} />
                         </div>
                     </div>
                 </div>
