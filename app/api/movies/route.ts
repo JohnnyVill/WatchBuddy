@@ -6,6 +6,7 @@ const categoryEndpoints: Record<string, string> = {
   popular: "movie/popular",
   top_rated: "movie/top_rated",
   now_playing: "movie/now_playing",
+  upcoming: "movie/upcoming",
 };
 
 export async function GET(request: Request) {

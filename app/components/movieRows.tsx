@@ -6,27 +6,32 @@ type HomeProps = {
   popularMovies: any[];
   topRatedMovies: any[];
   nowPlayingMovies: any[];
+  upcomingMovies: any[];
 };
 
-type CategoryKey = "popular" | "top_rated" | "now_playing";
+type CategoryKey = "popular" | "top_rated" | "now_playing" | "upcoming";
 
-export default function HomeRows({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying }: HomeProps) {
+export default function HomeRows({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying, upcomingMovies: initialUpcoming }: HomeProps) {
   const router = useRouter();
   const [popular, setPopular] = useState(initialPopular ?? []);
   const [topRated, setTopRated] = useState(initialTopRated ?? []);
   const [nowPlaying, setNowPlaying] = useState(initialNowPlaying ?? []);
+  const [upcoming, setUpcoming] = useState(initialUpcoming ?? []);
 
   const [popularPage, setPopularPage] = useState(1);
   const [topRatedPage, setTopRatedPage] = useState(1);
   const [nowPlayingPage, setNowPlayingPage] = useState(1);
+  const [upcomingPage, setUpcomingPage] = useState(1);
 
   const [popularLoading, setPopularLoading] = useState(false);
   const [topRatedLoading, setTopRatedLoading] = useState(false);
   const [nowPlayingLoading, setNowPlayingLoading] = useState(false);
+  const [upcomingLoading, setUpcomingLoading] = useState(false);
 
   const [popularHasMore, setPopularHasMore] = useState(true);
   const [topRatedHasMore, setTopRatedHasMore] = useState(true);
   const [nowPlayingHasMore, setNowPlayingHasMore] = useState(true);
+  const [upcomingHasMore, setUpcomingHasMore] = useState(true);
 
   const [dragState, setDragState] = useState({
     isDragging: false,
@@ -66,6 +71,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
       popular: { loading: popularLoading, page: popularPage, setLoading: setPopularLoading, setPage: setPopularPage, setMovies: setPopular, hasMore: popularHasMore, setHasMore: setPopularHasMore, movies: popular },
       top_rated: { loading: topRatedLoading, page: topRatedPage, setLoading: setTopRatedLoading, setPage: setTopRatedPage, setMovies: setTopRated, hasMore: topRatedHasMore, setHasMore: setTopRatedHasMore, movies: topRated },
       now_playing: { loading: nowPlayingLoading, page: nowPlayingPage, setLoading: setNowPlayingLoading, setPage: setNowPlayingPage, setMovies: setNowPlaying, hasMore: nowPlayingHasMore, setHasMore: setNowPlayingHasMore, movies: nowPlaying },
+      upcoming: { loading: upcomingLoading, page: upcomingPage, setLoading: setUpcomingLoading, setPage: setUpcomingPage, setMovies: setUpcoming, hasMore: upcomingHasMore, setHasMore: setUpcomingHasMore, movies: upcoming },
     };
 
     const entry = stateMap[category];
@@ -146,6 +152,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
       {renderRow("Popular Movies", popular, "popular", popularLoading)}
       {renderRow("Top Rated Movies", topRated, "top_rated", topRatedLoading)}
       {renderRow("Now Playing Movies", nowPlaying, "now_playing", nowPlayingLoading)}
+      {renderRow("Upcoming Movies", upcoming, "upcoming", upcomingLoading)}
     </div>
   );
 }

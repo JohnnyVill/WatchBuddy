@@ -7,9 +7,10 @@ type HomeProps = {
   popularMovies: any[];
   topRatedMovies: any[];
   nowPlayingMovies: any[];
+  upcomingMovies: any[];
 };
 
-export default function Home({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying }: HomeProps) {
+export default function Home({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying, upcomingMovies: initialUpcoming }: HomeProps) {
   const scrollToSection = (id: string) => {
   document.getElementById(id)?.scrollIntoView({
     behavior: "smooth",
@@ -73,6 +74,7 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
             popularMovies={initialPopular}
             topRatedMovies={initialTopRated}
             nowPlayingMovies={initialNowPlaying}
+            upcomingMovies={initialUpcoming}
           />
 
           

@@ -35,6 +35,10 @@ export function fetchNowPlayingMovies() {
     return fetchTmdbMovies("movie/now_playing")
 }
 
+export function fetchUpcomingMovies() {
+    return fetchTmdbMovies("movie/upcoming")
+}
+
 export async function fetchMovieDetails(movieId: string) {
     try {
         const response = await fetch(`${TMDB_BASE_URL}/movie/${movieId}?language=en-US`, options)
