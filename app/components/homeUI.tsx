@@ -18,12 +18,6 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
 
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -49,27 +43,42 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
             style={{ height: "auto" }}
           />
         </div>
-        <nav className="flex space-x-6">
-          <button onClick={() => setShowLoginModal(true)} className="hover:text-gray-300">
-            Login
-          </button>
-          <button onClick={() => setShowSignupModal(true)} className="hover:text-gray-300">
-            Signup
-          </button>
-        </nav>
+        {!isLoggedIn ? (
+          <nav className="flex space-x-6">
+            <button onClick={() => setShowLoginModal(true)} className="hover:text-gray-300">
+              Login
+            </button>
+            <button onClick={() => setShowSignupModal(true)} className="hover:text-gray-300">
+              Signup
+            </button>
+          </nav>
+        ): //text that welcomes the user and a logout button
+        (
+          <nav className="flex space-x-6">
+            <span className="text-gray-300">Welcome back, {isLoggedIn && "User"}!</span>
+            <button onClick={() => setIsLoggedIn(false)} className="hover:text-gray-300">
+              Logout
+            </button>
+          </nav>
+        )}
       </header>
 
+   
       <LoginModal
         visible={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onLogin={handleLogin}
       />
+  
 
+      
       <SignupModal
         visible={showSignupModal}
         onClose={() => setShowSignupModal(false)}
         onSignup={handleSignup}
       />
+    
+
       <section className="relative h-screen flex items-center justify-center bg-gradient-to-r from-black via-transparent to-black">
         <div
           id="home"
