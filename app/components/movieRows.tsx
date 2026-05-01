@@ -7,11 +7,12 @@ type HomeProps = {
   topRatedMovies: any[];
   nowPlayingMovies: any[];
   upcomingMovies: any[];
+  isLoggedIn: boolean;
 };
 
 type CategoryKey = "popular" | "top_rated" | "now_playing" | "upcoming";
 
-export default function HomeRows({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying, upcomingMovies: initialUpcoming }: HomeProps) {
+export default function HomeRows({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying, upcomingMovies: initialUpcoming, isLoggedIn }: HomeProps) {
   const router = useRouter();
   const [popular, setPopular] = useState(initialPopular ?? []);
   const [topRated, setTopRated] = useState(initialTopRated ?? []);
@@ -115,19 +116,19 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
     router.push(`/movies/${movie.id}`);
   };
 
-  const renderRow = (title: string, movies: any[], category: CategoryKey, loading: boolean) => (
-    <section id={category} className="py-8 px-4">
+  const renderRow = (title: string, movies: any[], category: CategoryKey | null, loading: boolean) => (
+    <section id={category || "watch_history"} className="py-8 px-4">
       <h2 className="text-2xl font-bold mb-4">{title}</h2>
       <div
         className="flex space-x-4 overflow-x-scroll pb-4 cursor-grab active:cursor-grabbing"
-        onScroll={handleScroll(category)}
+        onScroll={category ? handleScroll(category) : undefined}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
         {movies?.map((movie: any, i: number) => (
-          <div key={`${category}-${movie.id ?? i}-${i}`} className="relative flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden hover:scale-110 transition-transform duration-300" onClick={handleClick(movie)}>
+          <div key={`${category || "watch"}-${movie.id ?? i}-${i}`} className="relative flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden hover:scale-110 transition-transform duration-300" onClick={handleClick(movie)}>
             <Image
               src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
               alt={`Movie ${movie.title}`}
@@ -149,6 +150,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
 
   return (
     <div>
+      {isLoggedIn && renderRow("Watch History", popular.slice(0, 5), null, false)}
       {renderRow("Popular Movies", popular, "popular", popularLoading)}
       {renderRow("Top Rated Movies", topRated, "top_rated", topRatedLoading)}
       {renderRow("Now Playing Movies", nowPlaying, "now_playing", nowPlayingLoading)}

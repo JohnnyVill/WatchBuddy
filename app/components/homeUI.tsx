@@ -1,7 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import HomeRows from "./movieRows";
+import LoginModal from "./loginModal";
+import SignupModal from "./signUpModal";
 
 type HomeProps = {
   popularMovies: any[];
@@ -11,12 +14,26 @@ type HomeProps = {
 };
 
 export default function Home({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying, upcomingMovies: initialUpcoming }: HomeProps) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+
   const scrollToSection = (id: string) => {
-  document.getElementById(id)?.scrollIntoView({
-    behavior: "smooth",
-    block: "start",
-  });
-};
+    document.getElementById(id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+    setShowLoginModal(false);
+  };
+
+  const handleSignup = () => {
+    setIsLoggedIn(true);
+    setShowSignupModal(false);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -33,27 +50,29 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
           />
         </div>
         <nav className="flex space-x-6">
-          <button onClick={() => scrollToSection("home")} className="hover:text-gray-300">
-            Home
+          <button onClick={() => setShowLoginModal(true)} className="hover:text-gray-300">
+            Login
           </button>
-
-          <button onClick={() => scrollToSection("popular")} className="hover:text-gray-300">
-            Popular
-          </button>
-
-          <button onClick={() => scrollToSection("top_rated")} className="hover:text-gray-300">
-            Top Rated
-          </button>
-
-          <button onClick={() => scrollToSection("now_playing")} className="hover:text-gray-300">
-            Now Playing
+          <button onClick={() => setShowSignupModal(true)} className="hover:text-gray-300">
+            Signup
           </button>
         </nav>
       </header>
-    
+
+      <LoginModal
+        visible={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLogin={handleLogin}
+      />
+
+      <SignupModal
+        visible={showSignupModal}
+        onClose={() => setShowSignupModal(false)}
+        onSignup={handleSignup}
+      />
       <section className="relative h-screen flex items-center justify-center bg-gradient-to-r from-black via-transparent to-black">
         <div
-         id="home"
+          id="home"
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage:
@@ -70,14 +89,14 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
         </div>
       </section>
 
-          <HomeRows
-            popularMovies={initialPopular}
-            topRatedMovies={initialTopRated}
-            nowPlayingMovies={initialNowPlaying}
-            upcomingMovies={initialUpcoming}
-          />
+      <HomeRows
+        popularMovies={initialPopular}
+        topRatedMovies={initialTopRated}
+        nowPlayingMovies={initialNowPlaying}
+        upcomingMovies={initialUpcoming}
+        isLoggedIn={isLoggedIn}
+      />
 
-          
     </div>
   );
 }

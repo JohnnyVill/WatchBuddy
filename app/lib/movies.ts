@@ -1,8 +1,6 @@
 import { fetchPopularMovies, fetchTopRatedMovies, fetchNowPlayingMovies, fetchUpcomingMovies } from "./tmdb" ;
-import { testDbConnection } from "./db";
 
 export async function fetchMovieData(){
-    await testDbConnection();
     const [popularMovies,topRatedMovies,nowPlayingMovies,upcomingMovies] = await Promise.all([
         fetchPopularMovies(),
         fetchTopRatedMovies(),
