@@ -69,8 +69,6 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
         onClose={() => setShowLoginModal(false)}
         onLogin={handleLogin}
       />
-  
-
       
       <SignupModal
         visible={showSignupModal}
