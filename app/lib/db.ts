@@ -41,6 +41,32 @@ export async function signup(username: string, password: string){
   
 }
 
+export async function login(username: string, loginPassword: string) {
+  const client = await pool.connect();
+  try{
+    const result = await client.query(
+      "SELECT id, password FROM users WHERE username = $1",
+      [username]
+    )
+    if(result.rows.length > 0){
+      const user = result.rows[0];
+      const passwordMatch = await bcrypt.compare(loginPassword, user.password);
+      if(passwordMatch){
+        return user.id;
+      }else{
+        throw new Error("INVALID_CREDENTIALS");
+      }
+    }else{
+      throw new Error("INVALID_CREDENTIALS");
+    }
+  }catch(error:any){
+    console.error("Error during login:", error);
+    throw error;
+  }
+  finally {
+    client.release();
+  }
+}
 // export async function testDbConnection() {
 //   const client = await pool.connect();
 
