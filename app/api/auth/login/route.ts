@@ -1,4 +1,5 @@
 import { login } from "../../../lib/db";
+import {createSession} from "../../../lib/session";
 
 export async function POST(request: Request) {
     try {
@@ -10,8 +11,11 @@ export async function POST(request: Request) {
             );
         }
         const userId = await login(username, password);
+        if(userId){
+            await createSession(userId, username);
+        }
         return new Response(
-            JSON.stringify({ message: "Login successful", userId }),
+            JSON.stringify({ message: "Login successful", userId}),
             { status: 200 }
         );
         

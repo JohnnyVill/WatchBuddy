@@ -5,27 +5,32 @@ import { useState } from "react";
 import HomeRows from "./movieRows";
 import LoginModal from "./loginModal";
 import SignupModal from "./signUpModal";
+import {useRouter} from "next/navigation";
+import Logout from "./logout";
 
 type HomeProps = {
   popularMovies: any[];
   topRatedMovies: any[];
   nowPlayingMovies: any[];
   upcomingMovies: any[];
+  activeSession?: string | false;
 };
 
-export default function Home({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying, upcomingMovies: initialUpcoming }: HomeProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+export default function Home({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying, upcomingMovies: initialUpcoming, activeSession }: HomeProps) {
+  const isLoggedIn = !!activeSession;
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
-
+  const router = useRouter();
 
   const handleLogin = () => {
-    setIsLoggedIn(true);
+    isLoggedIn
+    router.refresh(); // Refresh the page to update session state
     setShowLoginModal(false);
   };
 
   const handleSignup = () => {
-    setIsLoggedIn(true);
+    isLoggedIn
+    router.refresh(); // Refresh the page to update session state
     setShowSignupModal(false);
   };
 
@@ -55,10 +60,8 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
         ): //text that welcomes the user and a logout button
         (
           <nav className="flex space-x-6">
-            <span className="text-gray-300">Welcome back, {isLoggedIn && "User"}!</span>
-            <button onClick={() => setIsLoggedIn(false)} className="hover:text-gray-300">
-              Logout
-            </button>
+            <span className="text-gray-300">Welcome back, {isLoggedIn && activeSession}!</span>
+            <Logout />
           </nav>
         )}
       </header>
