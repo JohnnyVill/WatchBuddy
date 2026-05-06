@@ -42,8 +42,9 @@ export default function SignupModal({ visible, onClose, onSignup }: SignupModalP
       }
 
       const data = await response.json();
-      console.log("Signup successful:", data);
       setSignupError("");
+      setUsername("");
+      setPassword("");
       onSignup();
     } catch (error:any) {
       console.error("Signup failed:", error);

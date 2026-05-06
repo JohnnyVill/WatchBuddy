@@ -35,7 +35,6 @@ export default function LoginModal({ visible, onClose, onLogin }: LoginModalProp
         return;
       }
       const data = await response.json();
-      console.log("Login successful:", data);
       onLogin();
       setUsername("");
       setPassword("");

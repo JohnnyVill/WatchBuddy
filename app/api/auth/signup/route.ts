@@ -1,5 +1,5 @@
-import { headers } from "next/headers";
 import {signup} from "../../../lib/db";
+import {createSession} from "../../../lib/session";
 export async function POST(request: Request) {
 
     try {
@@ -13,6 +13,7 @@ export async function POST(request: Request) {
         }
 
         const userId = await signup(username, password);
+        if(userId) await createSession(userId, username);
 
         return new Response(
         JSON.stringify({ message: "Signup successful", userId }),
