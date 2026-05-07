@@ -40,7 +40,8 @@ export async function createSession(userId: number, username?: string) {
         httpOnly: true,
         secure:true,
         sameSite: 'lax',
-        path: '/'
+        path: '/',
+        expires: expiresAt
     })
 }
 
@@ -62,6 +63,9 @@ export async function updateSession(request:NextRequest) {
         name: 'userSession',
         value: await encrypt(parse),
         httpOnly: true,
+        secure:true,
+        sameSite: 'lax',
+        path: '/',
         expires: parse.expiresAt
     });
     return res;
