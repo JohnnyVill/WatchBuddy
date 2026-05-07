@@ -16,7 +16,7 @@ export async function POST(request: Request) {
         if(userId) await createSession(userId, username);
 
         return new Response(
-        JSON.stringify({ message: "Signup successful", userId }),
+        JSON.stringify({ message: "Signup successful"}),
         { status: 200 }
         );
     } 

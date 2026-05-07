@@ -34,7 +34,7 @@ export default function LoginModal({ visible, onClose, onLogin }: LoginModalProp
         alert(errorData.message || "Login failed. Please try again.");
         return;
       }
-      const data = await response.json();
+      // const data = await response.json();
       onLogin();
       setUsername("");
       setPassword("");
