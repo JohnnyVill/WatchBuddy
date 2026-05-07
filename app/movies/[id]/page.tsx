@@ -1,3 +1,4 @@
+import WatchButton from "@/app/components/watchButton";
 import WatchProviders from "@/app/components/watchProviders";
 import { fetchMovieDetails, fetchMovieTrailers} from "@/app/lib/tmdb";
 import Image from "next/image";
@@ -16,6 +17,10 @@ export default async function MovieDetailsPage({params}: {params: {id: string}})
                 <h1 className="text-2xl">Movie not found</h1>
             </div>
         );
+    }
+
+    function handleClicked(){
+        console.log("clicked")
     }
 
     return (
@@ -59,6 +64,7 @@ export default async function MovieDetailsPage({params}: {params: {id: string}})
                         </div>
                     </div>
                 </div>
+               <WatchButton/>
                 <div className="mt-8">
                     {hasTrailers &&
                     <div> 
