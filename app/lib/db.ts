@@ -67,14 +67,3 @@ export async function login(username: string, loginPassword: string) {
     client.release();
   }
 }
-
-// export async function testDbConnection() {
-//   const client = await pool.connect();
-
-//   try {
-//     const result = await client.query("SELECT current_database()");
-//     console.log("Connected to:", result.rows[0]);
-//   } finally {
-//     client.release();
-//   }
-// }
