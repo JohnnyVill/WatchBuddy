@@ -67,3 +67,23 @@ export async function login(username: string, loginPassword: string) {
     client.release();
   }
 }
+
+export async function watchedMovie(userID:Number, watched: boolean, movieID: Number){
+  const client = await pool.connect();
+  try {
+    const result = await client.query("SELECT completed FROM watch_history WHERE user_id = $1", [userID])
+    if(result.rows[0] > 0){
+    console.log(result.rows[0])
+    }else{
+      try {
+        const insertDb = await client.query('INSERT INTO watch_history (user_id, tmdb_id, completed) VALUES ($1,$2, $3)', 
+          [userID, movieID, watched])
+        console.log("Insert in watch history table", insertDb.rows[0])
+      } catch (error) {
+        console.log("error in inserting into watch history ", error)
+      }
+    }
+  } catch (error) {
+    console.log("could not connect: ", error)
+  }
+}

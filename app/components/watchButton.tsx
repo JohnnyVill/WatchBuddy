@@ -2,12 +2,41 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useParams } from "next/navigation";
 
 export default function WatchButton() {
     const [watched, setWatched] = useState(false);
-
+    const params = useParams()
     function handleClicked(){
         setWatched(true);
+        async function watchList(){
+            const movieId =  params.id
+            try{
+                const response = await fetch("/api/users",{
+                    method:"POST",
+                    headers:{
+                        "Content-Type" : "application/json"
+                    },
+                    body:JSON.stringify({
+                        movieId,
+                        completed: true
+                    })
+                })
+                if(!response.ok){
+                    console.error("error", response)
+                    return
+                }
+                const data = await response.json
+                console.log(data)
+                return data
+            }
+            catch(error){
+                console.log("Error occured in fetch",error)
+            }
+    
+        }
+     
+        console.log(watchList())
     }
 
     return(
