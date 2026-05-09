@@ -4,7 +4,7 @@ import { getSession } from "../../lib/session";
 export async function POST(request: Request) {
     try {
         const {completed, movieId} = await request.json()
-        if(!completed || !movieId){
+        if(!movieId){
             return new Response(
                 JSON.stringify({message:"Something went wrong in getting completed information"}),
                 {status:400}
@@ -21,6 +21,8 @@ export async function POST(request: Request) {
                 JSON.stringify({ message:"added to watched"}),
                 {status:200},
             )
+        }else{
+            console.error("Problem in getting user session")
         }
     } catch (error) {
         console.error("Error updating watch status:", error);

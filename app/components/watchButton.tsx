@@ -8,7 +8,8 @@ export default function WatchButton() {
     const [watched, setWatched] = useState(false);
     const params = useParams()
     function handleClicked(){
-        setWatched(true);
+        setWatched(!watched);
+        let newWatch = !watched
         async function watchList(){
             const movieId =  params.id
             try{
@@ -19,14 +20,14 @@ export default function WatchButton() {
                     },
                     body:JSON.stringify({
                         movieId,
-                        completed: true
+                        completed: newWatch
                     })
                 })
                 if(!response.ok){
                     console.error("error", response)
                     return
                 }
-                const data = await response.json
+                const data = await response.json()
                 console.log(data)
                 return data
             }
@@ -46,7 +47,6 @@ export default function WatchButton() {
                 !watched &&"bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 active:scale-95"
             }`}
             onClick={handleClicked}
-            disabled={watched}
         >
             <div className="flex items-center gap-2">
                 {watched && <Image src="/checkmark.svg" alt="Watched" width={40} height={40} />}
