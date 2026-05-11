@@ -1,6 +1,8 @@
 import WatchButton from "@/app/components/watchButton";
 import WatchProviders from "@/app/components/watchProviders";
 import { fetchMovieDetails, fetchMovieTrailers} from "@/app/lib/tmdb";
+import{getMovieById} from "../../lib/db"
+import {getSession} from "../../lib/session"
 import Image from "next/image";
 
 export default async function MovieDetailsPage({params}: {params: {id: string}}){
@@ -9,7 +11,7 @@ export default async function MovieDetailsPage({params}: {params: {id: string}})
     const trailers = await fetchMovieTrailers(movieDetails.id);
     const hasTrailers = trailers.filter((trailer: any) => trailer.official && trailer.site === "YouTube" && trailer.type === "Trailer").length > 0? true : false;
 
-      
+ 
 
     if (!movie) {
         return (
@@ -19,7 +21,7 @@ export default async function MovieDetailsPage({params}: {params: {id: string}})
         );
     }
 
-    function handleClicked(){
+    async function handleClicked(){
         console.log("clicked")
     }
 

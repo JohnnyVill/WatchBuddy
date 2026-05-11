@@ -2,6 +2,7 @@ import Image from "next/image";
 import { useState, type MouseEvent, type UIEvent } from "react";
 import { useRouter } from "next/navigation";
 
+
 type HomeProps = {
   popularMovies: any[];
   topRatedMovies: any[];
@@ -67,6 +68,16 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
     setDragState({ ...dragState, isDragging: false});
   };
 
+  const watched = async () =>{
+    try{
+      const response = fetch("api/movies/watched")
+      return response
+    }catch{
+      console.log("could not fecth the watch history request")
+    }
+    
+  }
+
   const fetchMoreMovies = async (category: CategoryKey) => {
     const stateMap = {
       popular: { loading: popularLoading, page: popularPage, setLoading: setPopularLoading, setPage: setPopularPage, setMovies: setPopular, hasMore: popularHasMore, setHasMore: setPopularHasMore, movies: popular },
@@ -82,7 +93,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
     const nextPage = entry.page + 1;
 
     try {
-      const response = await fetch(`/api/movies?category=${category}&page=${nextPage}`);
+      const response = await fetch(`/api/movies/route?category=${category}&page=${nextPage}`);
       if (!response.ok) throw new Error("Failed to load more movies.");
 
       const data = await response.json();

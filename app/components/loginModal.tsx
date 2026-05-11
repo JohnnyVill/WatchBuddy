@@ -52,7 +52,7 @@ export default function LoginModal({ visible, onClose, onLogin }: LoginModalProp
             placeholder="Username"
             className="w-full p-2 mb-4 bg-gray-700 text-white rounded"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setUsername((e.target.value).trim())}
             required
           />
           <input
@@ -60,7 +60,7 @@ export default function LoginModal({ visible, onClose, onLogin }: LoginModalProp
             placeholder="Password"
             className="w-full p-2 mb-4 bg-gray-700 text-white rounded"
             value={password}
-            onChange={(e)=> setPassword(e.target.value)}
+            onChange={(e)=> setPassword((e.target.value).trim())}
             required
           />
           <button type="submit" className="w-full bg-red-600 hover:bg-red-700 p-2 rounded">

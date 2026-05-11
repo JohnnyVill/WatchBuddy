@@ -9,7 +9,7 @@ type Provider = {
 export default async function WatchProviders({ params }: { params: { id: string } }) {
     const movieDetails = params;
     const { flatrate, rent, buy }: { flatrate?: Provider[]; rent?: Provider[]; buy?: Provider[] } = await getUsProviderData(movieDetails.id);
-    console.log("Flatrate providers:", flatrate, "Rent providers:", rent, "Buy providers:", buy);
+    // console.log("Flatrate providers:", flatrate, "Rent providers:", rent, "Buy providers:", buy);
 
     // Collect all unique providers
     const allProviders = new Set([...(flatrate || []), ...(rent || []), ...(buy || [])].map((p: Provider) => p.provider_id));

@@ -95,4 +95,24 @@ export async function watchedMovie(userID:Number, watched: boolean, movieID: Num
   } catch (error) {
     console.log("could not connect: ", error)
   }
+  finally{
+    client.release();
+  }
+}
+
+export async function getMovieById(userID: number){
+  const client = await pool.connect();
+
+  try{
+    const getMovieId = await client.query("SELECT w.tmdb_id FROM watch_history w JOIN users u ON w.user_id = u.id WHERE w.completed = true AND u.id = $1 ORDER BY w.last_watched_at ASC;", 
+      [userID]
+    )
+    return getMovieId.rows;
+  }
+  catch(error){
+    console.log("Error is fetching watch history", error);
+  }
+  finally{
+    client.release();
+  }
 }

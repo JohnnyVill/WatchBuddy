@@ -82,4 +82,5 @@ export async function fetchWhereToWatch(movieId: string) {
         //console.error(`Error fetching watch providers for movie ${movieId}:`, error);
         return null;
     }
-}   
+}
+

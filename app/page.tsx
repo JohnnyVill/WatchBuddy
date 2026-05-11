@@ -4,7 +4,7 @@ import Home from "./components/homeUI";
 export default async function Movies() {
 
     const session = await getSession();
-    const data = await fetchMovieData()
+    const data = await fetchMovieData() 
     return (
         <Home 
         activeSession={session ? session.username : false}
