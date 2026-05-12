@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { useState, type MouseEvent, type UIEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 
 type HomeProps = {
@@ -34,6 +35,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
   const [topRatedHasMore, setTopRatedHasMore] = useState(true);
   const [nowPlayingHasMore, setNowPlayingHasMore] = useState(true);
   const [upcomingHasMore, setUpcomingHasMore] = useState(true);
+  const [watchHistory, setWatchHistory] = useState<any[]>([]);
 
   const [dragState, setDragState] = useState({
     isDragging: false,
@@ -68,15 +70,27 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
     setDragState({ ...dragState, isDragging: false});
   };
 
-  const watched = async () =>{
-    try{
-      const response = fetch("api/movies/watched")
-      return response
-    }catch{
-      console.log("could not fecth the watch history request")
+  useEffect(() => {
+    async function loadWatchHistory() {
+      try {
+        const response = await fetch("/api/movies/watched");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch watch history");
+        }
+
+        const data = await response.json();
+
+        setWatchHistory(data.results);
+      } catch (error) {
+        console.error(error);
+      }
     }
-    
-  }
+
+    if (isLoggedIn) {
+      loadWatchHistory();
+    }
+  }, [isLoggedIn]);
 
   const fetchMoreMovies = async (category: CategoryKey) => {
     const stateMap = {
@@ -139,7 +153,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
         onMouseLeave={handleMouseUp}
       >
         {movies?.map((movie: any, i: number) => (
-          <div key={`${category || "watch"}-${movie.id ?? i}-${i}`} className="relative flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden hover:scale-110 transition-transform duration-300" onClick={handleClick(movie)}>
+          <div id={`${category || "watch"}`} key={`${category || "watch"}-${movie.id ?? i}-${i}`}  className="relative flex-shrink-0 w-48 h-72 bg-gray-800 rounded-lg overflow-hidden hover:scale-110 transition-transform duration-300" onClick={handleClick(movie)}>
             <Image
               src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
               alt={`Movie ${movie.title}`}
@@ -161,7 +175,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
 
   return (
     <div>
-      {isLoggedIn && renderRow("Watch History", popular.slice(0, 5), null, false)}
+      {isLoggedIn && renderRow("Watch History", watchHistory, null, false)}
       {renderRow("Popular Movies", popular, "popular", popularLoading)}
       {renderRow("Top Rated Movies", topRated, "top_rated", topRatedLoading)}
       {renderRow("Now Playing Movies", nowPlaying, "now_playing", nowPlayingLoading)}
