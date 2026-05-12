@@ -3,41 +3,64 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default function WatchButton() {
     const [watched, setWatched] = useState(false);
     const params = useParams()
-    function handleClicked(){
-        setWatched(!watched);
-        let newWatch = !watched
-        async function watchList(){
-            const movieId =  params.id
-            try{
-                const response = await fetch("/api/users",{
-                    method:"POST",
-                    headers:{
-                        "Content-Type" : "application/json"
-                    },
-                    body:JSON.stringify({
-                        movieId,
-                        completed: newWatch
-                    })
-                })
-                if(!response.ok){
-                    console.error("error", response)
-                    return
-                }
-                const data = await response.json()
-                console.log(data)
-                return data
-            }
-            catch(error){
-                console.log("Error occured in fetch",error)
-            }
-    
+
+    // Load initial watched state
+  useEffect(() => {
+        async function loadWatchStatus() {
+        try {
+            const response = await fetch("/api/movies/watched");
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+
+            const isWatched = data.results.some(
+            (movie: any) => movie.id.toString() === params.id
+            );
+
+            setWatched(isWatched);
+        } catch (error) {
+            console.error(error);
         }
-     
-        console.log(watchList())
+        }
+        loadWatchStatus();
+    }, [params.id]);
+
+    async function handleClicked(){
+        const newWatch = !watched
+        setWatched(!watched);
+
+        try {
+            const response = await fetch("/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    movieId: params.id,
+                    completed: newWatch,
+                }),
+            });
+
+            if (!response.ok) {
+                // revert UI if failed
+                setWatched(!newWatch);
+                return;
+            }
+
+            const data = await response.json();
+
+            console.log(data);
+        } catch (error) {
+            setWatched(!newWatch);
+
+            console.error(error);
+        }
     }
 
     return(
@@ -49,7 +72,7 @@ export default function WatchButton() {
             onClick={handleClicked}
         >
             <div className="flex items-center gap-2">
-                {watched && <Image src="/checkmark.svg" alt="Watched" width={40} height={40} />}
+                {watched && (<Image src="/checkmark.svg" alt="Watched" width={40} height={40} />)}
                 <span>{!watched && "Watched"}</span>
             </div>
         </button>

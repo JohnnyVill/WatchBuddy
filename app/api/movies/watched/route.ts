@@ -9,7 +9,7 @@ export async function GET(){
     const watchedMovies = await getMovieById(session?.userId||0)
 
     const movies = await Promise.all(watchedMovies? watchedMovies.map((movie) => fetchMovieDetails(movie.tmdb_id.toString())):"");
-    console.log("Movie watch history", movies)
+    // console.log("Movie watch history", movies)
     
     return NextResponse.json({
         results: movies.filter(Boolean),
