@@ -107,7 +107,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
     const nextPage = entry.page + 1;
 
     try {
-      const response = await fetch(`/api/movies/route?category=${category}&page=${nextPage}`);
+      const response = await fetch(`/api/movies?category=${category}&page=${nextPage}`);
       if (!response.ok) throw new Error("Failed to load more movies.");
 
       const data = await response.json();
