@@ -25,22 +25,15 @@ Before running the application, ensure you have the following installed:
                                                                                                                                                                                                    
 ### Key Components & Features:                                                                                                                                                                    
 ⚙️ Technology Stack Overview                                                                                                                                                                      
-                                                                                                                                                                                                   
- ┌───────────────────────┬────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────┐ 
- │ Layer                 │ Technology             │ Purpose                                                                                                              │ Key Packages          │ 
- ├───────────────────────┼────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────┤ 
- │ Frontend/Framework    │ Next.js (React)        │ Full-stack web framework providing server-side rendering, routing, and API endpoints.                                │ next, react,          │ 
- │                       │                        │                                                                                                                      │ react-dom             │ 
- ├───────────────────────┼────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────┤ 
- │ Styling               │ Tailwind CSS / PostCSS │ Utility-first CSS framework for rapid and responsive UI development.                                                 │ @tailwindcss/postcss  │ 
- ├───────────────────────┼────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────┤ 
- │ Authentication        │ NextAuth               │ Industry-standard library for managing user sign-in, sessions, and providers securely.                               │ next-auth             │ 
- ├───────────────────────┼────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────┤ 
- │ Database (ORM/Client) │ PostgreSQL (pg)        │ The primary relational database used for reliable and structured data storage.                                       │ pg, @types/pg         │ 
- ├───────────────────────┼────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────┤ 
- │ Security & Utility    │ bcrypt, jose           │ Used for cryptographic hashing (passwords) and handling JSON Web Tokens (JWTs), ensuring secure credentials          │ bcrypt, jose          │ 
- │                       │                        │ handling.                                                                                                            │                       │ 
- └───────────────────────┴────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴───────────────────────┘ 
+ 
+ 
+| Layer | Technology | Purpose | Key Packages |
+|---|---|---|---|
+| Frontend/Framework | Next.js (React) | Full-stack web framework providing SSR, routing, and API endpoints. | next, react, react-dom |
+| Styling | Tailwind CSS / PostCSS | Utility-first CSS framework for rapid responsive UI development. | @tailwindcss/postcss |
+| Authentication | NextAuth | Secure sign-in, sessions, and auth providers. | next-auth |
+| Database | PostgreSQL (pg) | Relational database for structured storage. | pg, @types/pg |
+| Security & Utility | bcrypt, jose | Password hashing and JWT handling. | bcrypt, jose |
                                                                                                                                                                                                    
  📂 Project Structure Analysis                                                                                                                                                                     
                                                                                                                                                                                                    
