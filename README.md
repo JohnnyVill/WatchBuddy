@@ -52,3 +52,4 @@ Before running the application, ensure you have the following installed:
                                                                                                                                                                                                    
  WatchBuddy is not just a static website; it's a fully functional, secured web application capable of handling user accounts and persistent scheduling data via a PostgreSQL backend, making it    
  suitable for a real-world deployment tracking shared or individual watch schedules.                                                                                                               
+
