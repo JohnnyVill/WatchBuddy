@@ -1,6 +1,6 @@
-
 import { NextResponse } from "next/server";
-import { fetchTmdbMovies, ratelimit } from "../../lib/tmdb";
+import { fetchTmdbMovies} from "../../lib/tmdb";
+import { ratelimit } from "../../middleware";
 
 const categoryEndpoints: Record<string, string> = {
   popular: "movie/popular",
@@ -15,11 +15,21 @@ export async function GET(request: Request) {
   const category = url.searchParams.get("category");
   const page = Number(url.searchParams.get("page") || "1");
   const ip = forwardedFor
-    ? forwardedFor.split(",")[0] 
+    ? forwardedFor.split(",")[0]
     : "anonymous";
-  const { success } = await ratelimit.limit(`${ip}:movies:${category}`);
-  if(!success) {
-    return new NextResponse("Rate limit exceeded", { status: 429 })
+
+  const { success, limit, remaining, reset } = await ratelimit.limit(`${ip}:movies:${category}`);
+
+  if (!success) {
+    return new NextResponse("Rate limit exceeded", {
+      status: 429,
+      headers: {
+        "X-RateLimit-Limit": String(limit),
+        "X-RateLimit-Remaining": String(remaining),
+        "X-RateLimit-Reset": String(reset),
+        "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)),
+      },
+    });
   }
 
   if (!category || !categoryEndpoints[category]) {

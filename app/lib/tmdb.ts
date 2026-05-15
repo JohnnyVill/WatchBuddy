@@ -1,5 +1,3 @@
-import { Ratelimit } from "@upstash/ratelimit"
-import { Redis } from "@upstash/redis"
 const TMDB_API_KEY = process.env.TMDB_API_KEY
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3"
@@ -9,14 +7,6 @@ const options = {
         Authorization: `Bearer ${TMDB_API_KEY}`,
     }
 }
-
-const redis = Redis.fromEnv()
-
-export const ratelimit = new Ratelimit ({
-    redis,
-    limiter: Ratelimit.slidingWindow(100, "60 s"), // 100 requests per minute
-
-})
 
 export async function fetchTmdbMovies(endpoint: string, page = 1) {
     try {
