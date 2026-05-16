@@ -67,7 +67,7 @@ export default async function MovieDetailsPage({params}: {params: {id: string}})
                     <div> 
                     <h2 className="text-2xl font-bold mb-4">Trailers</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {trailers.filter((trailer: any) => trailer.official && trailer.site === "YouTube" && trailer.type === "Trailer").map((trailer: any) => (
+                        {trailers.filter((trailer: any) => trailer.official && trailer.site === "YouTube" && trailer.type === "Trailer").slice(0,3).map((trailer: any) => (
                             <div key={trailer.id} className="aspect-video">
                                 <iframe
                                     src={`https://www.youtube.com/embed/${trailer.key}`}
