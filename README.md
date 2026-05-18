@@ -2,12 +2,14 @@
 
 ## Description
 
-WatchBuddy is a full-stack web application built with Next.js, designed to manage and synchronize watch schedules or activities. It utilizes modern authentication mechanisms (NextAuth) and interacts with a PostgreSQL database for persistent data storage. This codebase provides the foundation for tracking, scheduling, and viewing watch-related information across users.
+WatchBuddy is a full-stack web application built with Next.js, designed to manage and synchronize watch schedules or activities. It utilizes modern authentication mechanisms (NextAuth), Neon DB (serverless PostgreSQL) for persistent data storage, and Upstash Redis for rate limiting and caching. The app also integrates with the TMDB API for movie and TV metadata. This codebase provides the foundation for tracking, scheduling, and viewing watch-related information across users.
 
 ## Features Overview
 
 *   **User Authentication:** Secure user sign-up, login, and session management using NextAuth.
-*   **Database Integration:** Persistent data storage and retrieval via PostgreSQL (using `pg` package).
+*   **Database Integration:** Persistent data storage and retrieval via Neon DB (serverless PostgreSQL), using the `pg` package.
+*   **Rate Limiting / Caching:** Upstash Redis for serverless caching and API rate limiting.
+*   **External API:** TMDB (The Movie Database) integration for movie and TV show metadata.
 *   **Scheduling/Tracking:** Core logic for managing watch schedules or related activities.
 *   **Frontend:** Modern, reactive user interface built with React and Tailwind CSS.
 
@@ -32,7 +34,10 @@ Before running the application, ensure you have the following installed:
 | Frontend/Framework | Next.js (React) | Full-stack web framework providing SSR, routing, and API endpoints. | next, react, react-dom |
 | Styling | Tailwind CSS / PostCSS | Utility-first CSS framework for rapid responsive UI development. | @tailwindcss/postcss |
 | Authentication | NextAuth | Secure sign-in, sessions, and auth providers. | next-auth |
-| Database | PostgreSQL (pg) | Relational database for structured storage. | pg, @types/pg |
+| Database | Neon DB (Serverless PostgreSQL) | Serverless PostgreSQL with connection pooling. | pg, @types/pg |
+| Caching / Rate Limiting | Upstash Redis | Serverless Redis for rate limiting and caching. | @upstash/redis, @upstash/ratelimit |
+| External API | TMDB (The Movie Database) | Movie and TV show metadata via TMDB API. | — |
+| Analytics | Vercel Analytics | Privacy-first web analytics. | @vercel/analytics |
 | Security & Utility | bcrypt, jose | Password hashing and JWT handling. | bcrypt, jose |
                                                                                                                                                                                                    
  📂 Project Structure Analysis                                                                                                                                                                     
@@ -43,6 +48,6 @@ Before running the application, ensure you have the following installed:
                                                                                                                                                                                                    
  🚀 In Summary                                                                                                                                                                                     
                                                                                                                                                                                                    
- WatchBuddy is not just a static website; it's a fully functional, secured web application capable of handling user accounts and persistent scheduling data via a PostgreSQL backend, making it    
+ WatchBuddy is not just a static website; it's a fully functional, secured web application capable of handling user accounts, persistent scheduling data via a Neon DB (serverless PostgreSQL) backend, API rate limiting via Upstash Redis, and movie/TV metadata via TMDB — making it    
  suitable for a real-world deployment tracking shared or individual watch schedules.                                                                                                               
 
