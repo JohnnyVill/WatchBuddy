@@ -72,30 +72,15 @@ export async function watchedMovie(userID:Number, watched: boolean, movieID: Num
   const client = await pool.connect();
   try {
     const result = await client.query("SELECT completed FROM watch_history WHERE user_id = $1 AND tmdb_id = $2", [userID, movieID])
-    if(result.rows.length > 0){
-      try{
-        const updateDb = await client.query("UPDATE watch_history SET completed = $1 WHERE user_id = $2 AND tmdb_id = $3",
-          [watched, userID, movieID]
-        )
-        console.log("Updated watch history table")
-      }
-      catch(error){
-        console.log("error in updating table row", error)
-      }
-      
-    }else{
-      try {
-        const insertDb = await client.query('INSERT INTO watch_history (user_id, tmdb_id, completed) VALUES ($1,$2, $3)', 
-          [userID, movieID, watched])
-        console.log("Insert in watch history table")
-      } catch (error) {
-        console.log("error in inserting into watch history ", error)
-      }
+    try{
+      const upsertDb = await client.query(
+        "INSERT INTO watch_history (user_id, tmdb_id, completed) VALUES ($1,$2, $3) ON CONFLICT (user_id, tmdb_id) DO UPDATE SET completed = EXCLUDED.completed",
+        [userID, movieID, watched]
+      )
+    }catch(error){
+      console.log("error in upserting row", error)
     }
-  } catch (error) {
-    console.log("could not connect: ", error)
-  }
-  finally{
+  }finally{
     client.release();
   }
 }
