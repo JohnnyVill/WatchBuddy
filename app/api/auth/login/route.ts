@@ -1,49 +1,38 @@
-import { login} from "../../../lib/db";
-import {createSession} from "../../../lib/session";
-import { authRateLimit } from "../../../middleware";
+import { login } from "../../../lib/db";
+import { createSession } from "../../../lib/session";
 
 export async function POST(request: Request) {
-    const forwardedFor = request.headers.get("x-forwarded-for")
-    const ip = forwardedFor?.split(",")[0] ?? "anonymous"
-
-    const { success, limit, remaining, reset } = await authRateLimit.limit(`${ip}:login`)
-
-    if (!success) {
-        return new Response(
-            JSON.stringify({ message: "Too many requests" }),
-            {
-                status: 429,
-                headers: {
-                    "X-RateLimit-Limit": String(limit),
-                    "X-RateLimit-Remaining": String(remaining),
-                    "X-RateLimit-Reset": String(reset),
-                    "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)),
-                },
-            }
-        )
-    }
     try {
-        const {username, password} = await request.json();
+        const { username, password } = await request.json();
 
         if (!username || !password) {
             return new Response(
-                JSON.stringify({ message: "Missing username or password" }),
+                JSON.stringify({ message: "Missing username or password." }),
                 { status: 400 }
             );
         }
+
         const userId = await login(username, password);
-        if(userId){
+        if (userId) {
             await createSession(userId, username);
         }
+
         return new Response(
-            JSON.stringify({ message: "Login successful"}),
+            JSON.stringify({ message: "Login successful." }),
             { status: 200 }
         );
+    } catch (error) {
+        if (error instanceof Error && error.message === "INVALID_CREDENTIALS") {
+            return new Response(
+                JSON.stringify({ message: "Invalid username or password." }),
+                { status: 401 }
+            );
+        }
 
-    } catch {
+        console.error("Login error:", error instanceof Error ? error.message : "Unknown error");
         return new Response(
-            JSON.stringify({ message: "Invalid credentials" }),
-            { status: 401 }
+            JSON.stringify({ message: "Login failed. Please try again later." }),
+            { status: 500 }
         );
     }
 }

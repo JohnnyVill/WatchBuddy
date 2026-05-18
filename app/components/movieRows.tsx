@@ -36,6 +36,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
   const [nowPlayingHasMore, setNowPlayingHasMore] = useState(true);
   const [upcomingHasMore, setUpcomingHasMore] = useState(true);
   const [watchHistory, setWatchHistory] = useState<any[]>([]);
+  const [watchHistoryError, setWatchHistoryError] = useState(false);
 
   const [dragState, setDragState] = useState({
     isDragging: false,
@@ -83,7 +84,8 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
 
         setWatchHistory(data.results);
       } catch (error) {
-        console.error(error);
+        console.error("Failed to load watch history:", error instanceof Error ? error.message : "Unknown error");
+        setWatchHistoryError(true);
       }
     }
 
@@ -141,9 +143,12 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
     router.push(`/movies/${movie.id}`);
   };
 
-  const renderRow = (title: string, movies: any[], category: CategoryKey | null, loading: boolean) => (
+  const renderRow = (title: string, movies: any[], category: CategoryKey | null, loading: boolean, error?: boolean) => (
     <section id={category || "watch_history"} className="py-8 px-4">
       <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      {error && (
+        <p className="text-sm text-red-400 mb-4">Failed to load. Please try refreshing the page.</p>
+      )}
       <div
         className="flex space-x-4 overflow-x-scroll pb-4 cursor-grab active:cursor-grabbing"
         onScroll={category ? handleScroll(category) : undefined}
@@ -175,7 +180,7 @@ export default function HomeRows({ popularMovies: initialPopular, topRatedMovies
 
   return (
     <div>
-      {isLoggedIn && renderRow("Watch History", watchHistory, null, false)}
+      {isLoggedIn && renderRow("Watch History", watchHistory, null, false, watchHistoryError)}
       {renderRow("Popular Movies", popular, "popular", popularLoading)}
       {renderRow("Top Rated Movies", topRated, "top_rated", topRatedLoading)}
       {renderRow("Now Playing Movies", nowPlaying, "now_playing", nowPlayingLoading)}

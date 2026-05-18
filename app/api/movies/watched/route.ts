@@ -1,37 +1,23 @@
-import {getSession} from "../../../lib/session"
-import { getMovieById } from "@/app/lib/db"
-import {fetchMovieDetails} from "../../../lib/tmdb"
-import { NextResponse } from "next/server"
-import { ratelimit } from "../../../middleware";
+import { getSession } from "../../../lib/session";
+import { getMovieById } from "@/app/lib/db";
+import { fetchMovieDetails } from "../../../lib/tmdb";
+import { NextResponse } from "next/server";
 
-export async function GET(request:Request){
-    const forwardedFor = request.headers.get("x-forwarded-for")
+export async function GET() {
+  const session = await getSession();
 
-    const ip = forwardedFor
-    ? forwardedFor.split(",")[0]
-    : "anonymous"
+  if (!session) {
+    return NextResponse.json({ results: [] });
+  }
 
-    const { success, limit, remaining, reset } = await ratelimit.limit(`${ip}:watchedMovies`)
-
-    if (!success) {
-        return new NextResponse("Rate limit exceeded", {
-            status: 429,
-            headers: {
-                "X-RateLimit-Limit": String(limit),
-                "X-RateLimit-Remaining": String(remaining),
-                "X-RateLimit-Reset": String(reset),
-                "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)),
-            },
-        })
-    }
-
-    const session = await getSession()
-
-    const watchedMovies = await getMovieById(session?.userId||0)
-
-    const movies = await Promise.all(watchedMovies? watchedMovies.map((movie) => fetchMovieDetails(movie.tmdb_id.toString())):[]);
-
-    return NextResponse.json({
-        results: movies.filter(Boolean),
-    });
+  try {
+    const watchedMovies = await getMovieById(session.userId);
+    const movies = await Promise.all(
+      (watchedMovies ?? []).map((movie) => fetchMovieDetails(movie.tmdb_id.toString()))
+    );
+    return NextResponse.json({ results: movies.filter(Boolean) });
+  } catch (error) {
+    console.error("Failed to load watched movies:", error instanceof Error ? error.message : "Unknown error");
+    return NextResponse.json({ results: [] });
+  }
 }

@@ -26,10 +26,10 @@ export async function decrypt(session: string): Promise<SessionPayload> {
         algorithms: ["HS256"],
     });
     return payload as SessionPayload; 
-    } catch (error) {
-        console.error("Error decrypting session:", error);
+    } catch {
+        // Don't log raw JWT errors — could leak token structure in production
         throw new Error("INVALID_SESSION");
-    }  
+    }
 }
 
 export async function createSession(userId: number, username?: string) {

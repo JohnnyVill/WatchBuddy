@@ -1,7 +1,6 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 
-
 type LoginModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -11,6 +10,7 @@ type LoginModalProps = {
 export default function LoginModal({ visible, onClose, onLogin }: LoginModalProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
 
   if (!visible) {
     return null;
@@ -18,10 +18,14 @@ export default function LoginModal({ visible, onClose, onLogin }: LoginModalProp
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setLoginError("");
+
     if (!username || !password) {
-      alert("Please enter both username and password.");
+      setLoginError("Please enter both username and password.");
       return;
-    }else{
+    }
+
+    try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -29,16 +33,18 @@ export default function LoginModal({ visible, onClose, onLogin }: LoginModalProp
         },
         body: JSON.stringify({ username, password }),
       });
-      if(!response.ok){
+
+      if (!response.ok) {
         const errorData = await response.json();
-        alert(errorData.message || "Login failed. Please try again.");
+        setLoginError(errorData.message || "Login failed. Please try again.");
         return;
       }
-      // const data = await response.json();
+
       onLogin();
       setUsername("");
       setPassword("");
-      return;
+    } catch {
+      setLoginError("Unable to connect. Please check your internet connection.");
     }
   };
 
@@ -47,12 +53,15 @@ export default function LoginModal({ visible, onClose, onLogin }: LoginModalProp
       <div className="bg-gray-800 p-6 rounded-lg w-96">
         <h2 className="text-xl font-bold mb-4">Login</h2>
         <form onSubmit={handleSubmit}>
+          {loginError ? (
+            <div className="mb-4 text-sm text-red-400">{loginError}</div>
+          ) : null}
           <input
-            type="username"
+            type="text"
             placeholder="Username"
             className="w-full p-2 mb-4 bg-gray-700 text-white rounded"
             value={username}
-            onChange={(e) => setUsername((e.target.value).trim())}
+            onChange={(e) => setUsername(e.target.value.trim())}
             required
           />
           <input
@@ -60,7 +69,7 @@ export default function LoginModal({ visible, onClose, onLogin }: LoginModalProp
             placeholder="Password"
             className="w-full p-2 mb-4 bg-gray-700 text-white rounded"
             value={password}
-            onChange={(e)=> setPassword((e.target.value).trim())}
+            onChange={(e) => setPassword(e.target.value.trim())}
             required
           />
           <button type="submit" className="w-full bg-red-600 hover:bg-red-700 p-2 rounded">
