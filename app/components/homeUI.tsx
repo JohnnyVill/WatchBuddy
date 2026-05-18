@@ -38,15 +38,6 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
     <div className="min-h-screen bg-black text-white">
       <header className="flex items-center justify-between p-4 bg-black bg-opacity-75 fixed top-0 w-full z-10">
         <div className="flex items-center">
-          <Image
-            src="/next.svg"
-            alt="WatchBuddy Logo"
-            width={120}
-            height={40}
-            draggable={false}
-            className="dark:invert"
-            style={{ height: "auto" }}
-          />
         </div>
         {!isLoggedIn ? (
           <nav className="flex space-x-6">
