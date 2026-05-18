@@ -56,7 +56,7 @@ async function refreshSession(request: NextRequest, response: NextResponse): Pro
 }
 
 // ── Middleware entry point ─────────────────────────────────────
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   // Rate limiting for API routes
