@@ -44,6 +44,9 @@ export default function Home({
             Discover your next favorite movie or show
           </p>
         </div>
+        <div className="scroll-down"></div>
+
+
       </section>
 
       <HomeRows
