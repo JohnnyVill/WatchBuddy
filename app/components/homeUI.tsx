@@ -1,12 +1,7 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
+import Header from "./header";
 import HomeRows from "./movieRows";
-import LoginModal from "./loginModal";
-import SignupModal from "./signUpModal";
-import {useRouter} from "next/navigation";
-import Logout from "./logout";
 
 type HomeProps = {
   popularMovies: any[];
@@ -16,77 +11,38 @@ type HomeProps = {
   activeSession?: string | false;
 };
 
-export default function Home({ popularMovies: initialPopular, topRatedMovies: initialTopRated, nowPlayingMovies: initialNowPlaying, upcomingMovies: initialUpcoming, activeSession }: HomeProps) {
+export default function Home({
+  popularMovies: initialPopular,
+  topRatedMovies: initialTopRated,
+  nowPlayingMovies: initialNowPlaying,
+  upcomingMovies: initialUpcoming,
+  activeSession,
+}: HomeProps) {
   const isLoggedIn = !!activeSession;
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
-  const router = useRouter();
-
-  const handleLogin = () => {
-    isLoggedIn
-    router.refresh(); // Refresh the page to update session state
-    setShowLoginModal(false);
-  };
-
-  const handleSignup = () => {
-    isLoggedIn
-    router.refresh(); // Refresh the page to update session state
-    setShowSignupModal(false);
-  };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="flex items-center justify-between p-4 bg-black bg-opacity-75 fixed top-0 w-full z-10">
-        <div className="flex items-center">
-        </div>
-        {!isLoggedIn ? (
-          <nav className="flex space-x-6">
-            <button onClick={() => setShowLoginModal(true)} className="hover:text-gray-300">
-              Login
-            </button>
-            <button onClick={() => setShowSignupModal(true)} className="hover:text-gray-300">
-              Signup
-            </button>
-          </nav>
-        ): //text that welcomes the user and a logout button
-        (
-          <nav className="flex space-x-6">
-            <span className="text-gray-300">Welcome back, {isLoggedIn && activeSession}!</span>
-            <Logout />
-          </nav>
-        )}
-      </header>
+    <div className="min-h-dvh bg-background text-foreground">
+      <Header activeSession={activeSession} />
 
-   
-      <LoginModal
-        visible={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLogin={handleLogin}
-      />
-      
-      <SignupModal
-        visible={showSignupModal}
-        onClose={() => setShowSignupModal(false)}
-        onSignup={handleSignup}
-      />
-    
-
-      <section className="relative h-screen flex items-center justify-center bg-gradient-to-r from-black via-transparent to-black">
+      {/* Hero */}
+      <section className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden">
         <div
-          id="home"
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage:
               "url('https://images.unsplash.com/photo-1489599735734-79b4b9c8e8b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')",
           }}
-        ></div>
-        <div className="relative z-10 text-center max-w-2xl px-4">
-          <h1 className="text-5xl font-bold mb-4">WatchBuddy</h1>
-          <p className="text-xl mb-8">Discover your next favorite movie or TV show</p>
-          <div className="flex space-x-4 justify-center">
-            {/* <button className="bg-red-600 hover:bg-red-700 px-8 py-3 rounded font-semibold">Play</button>
-            <button className="bg-gray-600 hover:bg-gray-700 px-8 py-3 rounded font-semibold">More Info</button> */}
-          </div>
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/30 via-transparent to-background/30" />
+
+        <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
+          <h1 className="text-5xl font-bold tracking-tighter text-white md:text-7xl">
+            WatchBuddy
+          </h1>
+          <p className="mt-6 text-lg text-neutral-300 md:text-xl">
+            Discover your next favorite movie or show
+          </p>
         </div>
       </section>
 
@@ -97,9 +53,6 @@ export default function Home({ popularMovies: initialPopular, topRatedMovies: in
         upcomingMovies={initialUpcoming}
         isLoggedIn={isLoggedIn}
       />
-
     </div>
   );
 }
-
-

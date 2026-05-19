@@ -10,10 +10,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "@vercel/analytics": "^2.0.1",
     "bcrypt": "^6.0.0",
+    "framer-motion": "^12.39.0",
     "jose": "^6.2.3",
     "next": "^16.2.6",
     "next-auth": "^4.24.14",
