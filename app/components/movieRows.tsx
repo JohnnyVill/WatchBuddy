@@ -260,10 +260,6 @@ export default function HomeRows({
         <p className="mx-auto max-w-7xl text-sm text-red-400">
           Failed to load. Try refreshing the page.
         </p>
-      ) : movies.length === 0 && !loading ? (
-        <p className="mx-auto max-w-7xl text-sm text-muted-foreground">
-          Nothing here yet.
-        </p>
       ) : (
         <div
           className="scrollbar-hide mx-auto flex max-w-7xl gap-3 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing md:gap-4"
