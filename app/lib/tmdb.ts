@@ -18,13 +18,21 @@ export async function fetchTmdbMovies(endpoint: string, page = 1) {
             next:{revalidate: 3600} 
             })
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
+            const errorText = await response.text().catch(() => "");
+            console.error(
+                `[tmdb] ${endpoint} page ${page} → HTTP ${response.status}`,
+                errorText ? `— ${errorText.slice(0, 200)}` : "",
+            );
+            return [];
         }
         const data = await response.json()
-        //console.log(`Fetched ${endpoint} page ${page}:`, data)
+        console.log(`[tmdb] ${endpoint} page ${page} → ${data.results?.length ?? 0} results`);
         return data.results
     } catch (error) {
-        //console.error(`Error fetching ${endpoint} page ${page}:`, error)
+        console.error(
+            `[tmdb] ${endpoint} page ${page} →`,
+            error instanceof Error ? error.message : error,
+        );
         return []
     }
 }
@@ -88,4 +96,3 @@ export async function fetchWhereToWatch(movieId: string) {
         return null;
     }
 }
-

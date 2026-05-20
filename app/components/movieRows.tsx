@@ -273,7 +273,7 @@ export default function HomeRows({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          {movies.map((movie: any, i: number) => (
+          {movies?.map((movie: any, i: number) => (
             <div
               key={`${category ?? "watch"}-${movie.id ?? i}-${i}`}
               className="group relative w-40 flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-[1.04] active:scale-[0.98] md:w-48"
