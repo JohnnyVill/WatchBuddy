@@ -33,8 +33,8 @@ export async function fetchTmdbMovies(endpoint: string, page = 1) {
         return []
     }
 }
-export function fetchPopularMovies(page?: number) {
-    return fetchTmdbMovies("movie/popular", page)
+export function fetchPopularMovies() {
+    return fetchTmdbMovies("movie/popular")
 }
 
 export function fetchTopRatedMovies() {
