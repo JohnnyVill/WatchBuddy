@@ -18,7 +18,7 @@ export async function fetchTmdbMovies(endpoint: string, page = 1) {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
-        //console.log(`Fetched ${endpoint} page ${page}:`, data)
+        // console.log(`Fetched ${endpoint} page ${page}:`, data)
         console.log(`[tmdb] ${endpoint} page ${page} → ${data.results?.length ?? 0} results`);
         return data.results
     } catch (error) {
@@ -30,8 +30,8 @@ export async function fetchTmdbMovies(endpoint: string, page = 1) {
         return []
     }
 }
-export function fetchPopularMovies() {
-    return fetchTmdbMovies("movie/popular")
+export function fetchPopularMovies(page=1) {
+    return fetchTmdbMovies("movie/popular",page)
 }
 
 export function fetchTopRatedMovies() {
