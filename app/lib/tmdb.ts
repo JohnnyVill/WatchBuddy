@@ -13,10 +13,10 @@ const options = {
 export async function fetchTmdbMovies(endpoint: string, page = 1) {
     try {
         const response = await fetch(`${TMDB_BASE_URL}/${endpoint}?language=en-US&page=${page}`,
-            
-            options,
-            
-            )
+            {
+            ...options,
+            cache:"no-store"
+            })
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)
         }

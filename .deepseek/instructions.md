@@ -46,8 +46,3 @@ DIR: public
   FILE: window.svg
 FILE: tsconfig.json
 ```
-ERROR in production:
-[tmdb] movie/popular page 1 → Unexpected token '', "�"... is not valid JSON
-[tmdb] movie/top_rated page 1 → Unexpected token '', "�"... is not valid JSON
-[tmdb] movie/now_playing page 1 → 20 results
-[tmdb] movie/upcoming page 1 → Unexpected token '', "�"... is not valid JSON
