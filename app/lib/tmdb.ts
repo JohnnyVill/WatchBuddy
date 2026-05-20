@@ -1,4 +1,5 @@
 import "server-only";
+import { gunzipSync } from "zlib";
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY
 
@@ -8,6 +9,22 @@ const options = {
     headers: {
         Authorization: `Bearer ${TMDB_API_KEY}`,
     }
+}
+
+/**
+ * Parse a fetch Response as JSON, handling gzip-compressed bodies
+ * that may not be auto-decompressed in all environments.
+ */
+async function safeParseJsonResponse(response: Response) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    // gzip magic bytes: 0x1f 0x8b
+    if (buffer.length >= 2 && buffer[0] === 0x1f && buffer[1] === 0x8b) {
+        const decompressed = gunzipSync(buffer);
+        return JSON.parse(decompressed.toString("utf-8"));
+    }
+
+    return JSON.parse(buffer.toString("utf-8"));
 }
 
 export async function fetchTmdbMovies(endpoint: string, page = 1) {
@@ -25,7 +42,7 @@ export async function fetchTmdbMovies(endpoint: string, page = 1) {
             );
             return [];
         }
-        const data = await response.json()
+        const data = await safeParseJsonResponse(response)
         console.log(`[tmdb] ${endpoint} page ${page} → ${data.results?.length ?? 0} results`);
         return data.results
     } catch (error) {
@@ -58,7 +75,7 @@ export async function fetchMovieDetails(movieId: string) {
         if(!response.ok) {
             throw new Error(`Http error! status: ${response.status}`)
         }
-        const data = await response.json()
+        const data = await safeParseJsonResponse(response)
         //console.log(`Fetched details for movie ${movieId}:`, data)
         return data
     } catch (error) {
@@ -73,7 +90,7 @@ export async function fetchMovieTrailers(movieId: string) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
-        const data = await response.json()
+        const data = await safeParseJsonResponse(response)
         //console.log(`Fetched trailers for movie ${movieId}:`, data)
         return data.results
     } catch (error) {
@@ -88,7 +105,7 @@ export async function fetchWhereToWatch(movieId: string) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
+        const data = await safeParseJsonResponse(response);
         //console.log(`Fetched watch providers for movie ${movieId}:`, data);
         return data.results.US || null; // Return US providers or null if not available
     } catch (error) {
