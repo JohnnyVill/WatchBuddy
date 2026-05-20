@@ -1,5 +1,4 @@
 import "server-only";
-import { gunzipSync } from "zlib";
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY
 
@@ -11,22 +10,6 @@ const options = {
     }
 }
 
-/**
- * Parse a fetch Response as JSON, handling gzip-compressed bodies
- * that may not be auto-decompressed in all environments.
- */
-async function safeParseJsonResponse(response: Response) {
-    const buffer = Buffer.from(await response.arrayBuffer());
-
-    // gzip magic bytes: 0x1f 0x8b
-    if (buffer.length >= 2 && buffer[0] === 0x1f && buffer[1] === 0x8b) {
-        const decompressed = gunzipSync(buffer);
-        return JSON.parse(decompressed.toString("utf-8"));
-    }
-
-    return JSON.parse(buffer.toString("utf-8"));
-}
-
 export async function fetchTmdbMovies(endpoint: string, page = 1) {
     try {
         const response = await fetch(`${TMDB_BASE_URL}/${endpoint}?language=en-US&page=${page}`,
@@ -35,17 +18,14 @@ export async function fetchTmdbMovies(endpoint: string, page = 1) {
             next:{revalidate: 3600} 
             })
         if (!response.ok) {
-            const errorText = await response.text().catch(() => "");
-            console.error(
-                `[tmdb] ${endpoint} page ${page} → HTTP ${response.status}`,
-                errorText ? `— ${errorText.slice(0, 200)}` : "",
-            );
-            return [];
+            throw new Error(`HTTP error! status: ${response.status}`)
         }
-        const data = await safeParseJsonResponse(response)
+        const data = await response.json()
+        //console.log(`Fetched ${endpoint} page ${page}:`, data)
         console.log(`[tmdb] ${endpoint} page ${page} → ${data.results?.length ?? 0} results`);
         return data.results
     } catch (error) {
+        //console.error(`Error fetching ${endpoint} page ${page}:`, error)
         console.error(
             `[tmdb] ${endpoint} page ${page} →`,
             error instanceof Error ? error.message : error,
@@ -75,7 +55,7 @@ export async function fetchMovieDetails(movieId: string) {
         if(!response.ok) {
             throw new Error(`Http error! status: ${response.status}`)
         }
-        const data = await safeParseJsonResponse(response)
+        const data = await response.json()
         //console.log(`Fetched details for movie ${movieId}:`, data)
         return data
     } catch (error) {
@@ -90,7 +70,7 @@ export async function fetchMovieTrailers(movieId: string) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
-        const data = await safeParseJsonResponse(response)
+        const data = await response.json()
         //console.log(`Fetched trailers for movie ${movieId}:`, data)
         return data.results
     } catch (error) {
@@ -105,7 +85,7 @@ export async function fetchWhereToWatch(movieId: string) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await safeParseJsonResponse(response);
+        const data = await response.json();
         //console.log(`Fetched watch providers for movie ${movieId}:`, data);
         return data.results.US || null; // Return US providers or null if not available
     } catch (error) {

@@ -351,7 +351,7 @@ export default function HomeRows({
         !watchHistoryError &&
         renderRow("Watch History", [], null, false)}
 
-      {renderRow("Popular", popular, "popular", popularLoading)}
+      {renderRow("Popular Movies", popular, "popular", popularLoading)}
       {renderRow("Top Rated", topRated, "top_rated", topRatedLoading)}
       {renderRow(
         "Now Playing",
