@@ -7,16 +7,13 @@ const options = {
     method: 'GET',
     headers: {
         Authorization: `Bearer ${TMDB_API_KEY}`,
+        accept: "application/json"
     }
 }
 
 export async function fetchTmdbMovies(endpoint: string, page = 1) {
     try {
-        const response = await fetch(`${TMDB_BASE_URL}/${endpoint}?language=en-US&page=${page}`,
-            {
-            ...options,
-            cache:"no-store"
-            })
+        const response = await fetch(`${TMDB_BASE_URL}/${endpoint}?language=en-US&page=${page}`,options,)
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
