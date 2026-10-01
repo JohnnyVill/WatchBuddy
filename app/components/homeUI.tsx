@@ -1,61 +1,28 @@
-"use client";
-
-import Header from "./header";
 import HomeRows from "./movieRows";
-
-type HomeProps = {
-  popularMovies: any[];
-  topRatedMovies: any[];
-  nowPlayingMovies: any[];
-  upcomingMovies: any[];
-  activeSession?: string | false;
-};
-
-export default function Home({
-  popularMovies: initialPopular,
-  topRatedMovies: initialTopRated,
-  nowPlayingMovies: initialNowPlaying,
-  upcomingMovies: initialUpcoming,
-  activeSession,
-}: HomeProps) {
-  const isLoggedIn = !!activeSession;
-
+import { ArrowDown, CheckCircle, FilmSlate, Television } from "@phosphor-icons/react/dist/ssr";
+import type { MovieCatalog } from "../lib/types";
+export default function Home({ catalog }: { catalog: MovieCatalog }) {
   return (
-    <div className="min-h-dvh bg-background text-foreground">
-      <Header activeSession={activeSession} />
-
-      {/* Hero */}
-      <section className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1489599735734-79b4b9c8e8b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/30 via-transparent to-background/30" />
-
-        <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
-          <h1 className="text-5xl font-bold tracking-tighter text-white md:text-7xl">
-            WatchBuddy
+    <>
+      <section className="hero relative overflow-hidden border-b border-border">
+        <div className="hero-glow" aria-hidden="true" />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16">
+          <p className="eyebrow mb-4 flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-accent" /> Less scrolling. More movie nights.</p>
+          <h1 className="max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl">
+            Your next great watch<br /><span className="text-muted-foreground">starts here.</span>
           </h1>
-          <p className="mt-6 text-lg text-neutral-300 md:text-xl">
-            Discover your next favorite movie or show
+          <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
+            Discover a movie, find where it&apos;s streaming, and remember the ones you&apos;ve loved.
           </p>
+          <a href="#browse" className="button button-primary mt-7">Browse movies <ArrowDown size={18} aria-hidden="true" /></a>
+          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs text-muted-foreground sm:text-sm">
+            <span className="flex items-center gap-2"><FilmSlate size={18} aria-hidden="true" /> Find your next favorite</span>
+            <span className="flex items-center gap-2"><Television size={18} aria-hidden="true" /> See where to watch</span>
+            <span className="flex items-center gap-2"><CheckCircle size={18} aria-hidden="true" /> Keep your movie history</span>
+          </div>
         </div>
-        <div className="scroll-down"></div>
-
-
       </section>
-
-      <HomeRows
-        popularMovies={initialPopular}
-        topRatedMovies={initialTopRated}
-        nowPlayingMovies={initialNowPlaying}
-        upcomingMovies={initialUpcoming}
-        isLoggedIn={isLoggedIn}
-      />
-    </div>
+      <HomeRows catalog={catalog} />
+    </>
   );
 }

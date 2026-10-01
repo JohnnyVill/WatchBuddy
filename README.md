@@ -1,53 +1,68 @@
-# WatchBuddy 🕰️
+# WatchBuddy
 
-## Description
+A movie discovery and personal watch-history app built with Next.js 16, React 19, TypeScript, and Tailwind CSS.
 
-WatchBuddy is a full-stack web application built with Next.js, designed to manage and synchronize watch schedules or activities. It utilizes modern authentication mechanisms (NextAuth), Neon DB (serverless PostgreSQL) for persistent data storage, and Upstash Redis for rate limiting and caching. The app also integrates with the TMDB API for movie and TV metadata. This codebase provides the foundation for tracking, scheduling, and viewing watch-related information across users.
+Browse popular, top-rated, now-playing, and upcoming movies; view movie details and trailers; see subscription, rental, and purchase options in the United States; and mark movies as watched. Browsing is public. Accounts save a private history, with the most recently watched movies first.
 
-## Features Overview
+## Local setup
 
-*   **User Authentication:** Secure user sign-up, login, and session management using NextAuth.
-*   **Database Integration:** Persistent data storage and retrieval via Neon DB (serverless PostgreSQL), using the `pg` package.
-*   **Rate Limiting / Caching:** Upstash Redis for serverless caching and API rate limiting.
-*   **External API:** TMDB (The Movie Database) integration for movie and TV show metadata.
-*   **Scheduling/Tracking:** Core logic for managing watch schedules or related activities.
-*   **Frontend:** Modern, reactive user interface built with React and Tailwind CSS.
+Use Node.js 24 LTS or newer and npm.
 
-## Prerequisites
+1. Run `npm ci`.
+2. Copy `.env.example` to `.env.local` and fill in the variables.
+3. Run `npm run db:migrate` against your development database.
+4. Run `npm run dev` and open http://localhost:3000.
 
-Before running the application, ensure you have the following installed:
+Environment variables:
 
-*   Node.js (LTS recommended)
-*   npm or yarn
+| Variable | Purpose |
+| --- | --- |
+| `TMDB_API_KEY` | TMDB API **read-access bearer token**, not the v3 query-string API key |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `DATABASE_SSL` | Defaults to TLS; set `false` only for a local database without TLS |
+| `SESSION_SECRET` | JWT signing secret containing at least 32 bytes |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | API rate limiting; required in production, optional locally |
+| `TMDB_BASE_URL` | Optional isolated-test metadata endpoint; normally leave unset |
 
-                                                                                                                                                                                              
-✨ Core Functionality                                                                                                                                                                             
-                                                                                                                                                                                                 
- The primary goal of the application is to provide persistent storage, secure user access, and an interactive interface for users to track and manage shared or personal watch-related data.       
-                                                                                                                                                                                                   
-### Key Components & Features:                                                                                                                                                                    
-⚙️ Technology Stack Overview                                                                                                                                                                      
- 
- 
-| Layer | Technology | Purpose | Key Packages |
-|---|---|---|---|
-| Frontend/Framework | Next.js (React) | Full-stack web framework providing SSR, routing, and API endpoints. | next, react, react-dom |
-| Styling | Tailwind CSS / PostCSS | Utility-first CSS framework for rapid responsive UI development. | @tailwindcss/postcss |
-| Authentication | NextAuth | Secure sign-in, sessions, and auth providers. | next-auth |
-| Database | Neon DB (Serverless PostgreSQL) | Serverless PostgreSQL with connection pooling. | pg, @types/pg |
-| Caching / Rate Limiting | Upstash Redis | Serverless Redis for rate limiting and caching. | @upstash/redis, @upstash/ratelimit |
-| External API | TMDB (The Movie Database) | Movie and TV show metadata via TMDB API. | — |
-| Analytics | Vercel Analytics | Privacy-first web analytics. | @vercel/analytics |
-| Security & Utility | bcrypt, jose | Password hashing and JWT handling. | bcrypt, jose |
-                                                                                                                                                                                                   
- 📂 Project Structure Analysis                                                                                                                                                                     
-                                                                                                                                                                                                   
- - app/: This is the main directory containing all Next.js routing logic and component structures, defining the application's views and pages.                                                     
- - next.config.ts / tsconfig.json: Standard configuration files for optimizing the build process (TypeScript) and configuring Next.js behavior.                                                    
- - .env (Setup required): This file is crucial as it stores sensitive environmental variables, notably the database connection string (DATABASE_URL) and the secure NextAuth secrets.              
-                                                                                                                                                                                                   
- 🚀 In Summary                                                                                                                                                                                     
-                                                                                                                                                                                                   
- WatchBuddy is not just a static website; it's a fully functional, secured web application capable of handling user accounts, persistent scheduling data via a Neon DB (serverless PostgreSQL) backend, API rate limiting via Upstash Redis, and movie/TV metadata via TMDB — making it    
- suitable for a real-world deployment tracking shared or individual watch schedules.                                                                                                               
+Generate a session secret with `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"`.
 
+Authentication uses custom JWT sessions signed with `jose`, HTTP-only cookies, and `bcrypt` password hashes. NextAuth is an existing unused dependency, not the authentication implementation. Cookies are secure in production and support local HTTP during development. Passwords retain spaces and are limited to 72 UTF-8 bytes to prevent bcrypt truncation; usernames are trimmed and limited to 100 characters.
+
+## Database migrations
+
+`npm run db:migrate` reads `.env.local` if present, applies pending SQL files from `migrations/` in order, and records them in `schema_migrations`. The runner uses a transaction and advisory lock; running it again is safe.
+
+The initial migration creates `users` and `watch_history`, ensures the unique indexes used by signup and watched updates, and adds the watch timestamp if missing. Existing rows are preserved. Duplicate usernames or duplicate user/movie pairs must be resolved before applying unique indexes; the migration will fail rather than delete data. Back up an existing production database and review the migration before applying it there.
+
+## Verification
+
+- `npm run lint`: application, scripts, and tests; local skill bundles and generated artifacts are excluded.
+- `npm run typecheck`: TypeScript without emitting files.
+- `npm test`: catalog filtering, deduplication, and input validation.
+- `npm run build`: optimized production build.
+- `npm run test:browser`: isolated browser and HTTP regression checks.
+
+Browser tests use an installed Chrome, Chromium, or Edge executable via its DevTools protocol. No browser automation package is needed. Set `BROWSER_EXECUTABLE` if automatic detection does not find your browser. The runner starts a local TMDB fixture and a separate Next.js development server on port 3201; override this with `TEST_APP_PORT`. It overrides all service credentials and never connects to your normal database. Screenshots are written to `test-results/`; temporary browser profiles are stored in `.cache/browser/`.
+
+To include real PostgreSQL integration checks, provide `TEST_DATABASE_URL` pointing to a **dedicated test database**, migrate that database, then run browser tests. Otherwise only those database checks are skipped; client interactions use controlled API responses. CI creates a disposable PostgreSQL database and runs migrations twice, lint, unit tests, build, typecheck, and browser tests.
+
+## Data and API behavior
+
+Public TMDB metadata is cached for 15 minutes. User history and watched status use private, uncached responses. Catalog errors remain distinct from empty categories; rows retain their loaded movies and retry the failed page.
+
+Existing endpoint URLs are preserved:
+
+- `GET /api/movies?category=popular|top_rated|now_playing|upcoming&page=1` returns `{ results, page, total_pages }`. Pages are limited to 1–500. Upcoming filtering is applied to every page without losing pagination metadata.
+- `GET /api/movies/watched` returns `{ results }` for authenticated users, or 401 for guests.
+- `GET /api/movies/watched?movieId=123` returns `{ watched: boolean }` without fetching the entire TMDB history.
+- `POST /api/users` accepts `{ movieId: number | string, completed: boolean }` and saves the authenticated user's watched state.
+- `POST /api/auth/signup` and `POST /api/auth/login` accept `{ username, password }`; `POST /api/auth/logout` clears the session.
+- Errors return a non-success status and a `message` rather than a successful empty list.
+
+The UI is movie-only and US-only. Provider availability comes from TMDB's JustWatch data and links to the supplied TMDB watch page; provider logos are not direct streaming links. JustWatch attribution is shown beside provider information.
+
+## Accessibility and future work
+
+The interface supports keyboard movie links, visible focus, native modal dialogs with contained focus, password visibility, descriptive empty/error states, reduced motion, touch scrolling, and desktop row controls. System fonts remove a build-time dependency on Google Fonts.
+
+Next priorities are title search and a separate watchlist/library. TV tracking, recommendations, shared lists, and social features are outside this release.

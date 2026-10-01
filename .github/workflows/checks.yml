@@ -1,0 +1,48 @@
+name: Project checks
+on:
+  push:
+  pull_request:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: watchbuddy
+          POSTGRES_PASSWORD: watchbuddy
+          POSTGRES_DB: watchbuddy_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://watchbuddy:watchbuddy@127.0.0.1:5432/watchbuddy_test
+      TEST_DATABASE_URL: postgres://watchbuddy:watchbuddy@127.0.0.1:5432/watchbuddy_test
+      DATABASE_SSL: 'false'
+      SESSION_SECRET: watchbuddy-ci-secret-at-least-32-bytes
+      TMDB_API_KEY: fixture-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run db:migrate
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run test:browser
+        env:
+          BROWSER_EXECUTABLE: /usr/bin/google-chrome
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-artifacts
+          path: test-results/

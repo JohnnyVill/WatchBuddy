@@ -1,365 +1,191 @@
-import Image from "next/image";
-import {
-  useState,
-  useCallback,
-  useEffect,
-  type MouseEvent,
-  type UIEvent,
-} from "react";
-import { useRouter } from "next/navigation";
+"use client";
+import { useCallback, useEffect, useId, useRef, useState, type PointerEvent } from "react";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, CheckCircle, FilmSlate, Star } from "@phosphor-icons/react";
+import MovieImage from "./movieImage";
+import { useAuth } from "./authProvider";
+import { categories, mergeMovies } from "../lib/catalog";
+import type { CatalogSection, CategoryKey, Movie, MovieCatalog, MoviePage, WatchedResponse } from "../lib/types";
 
-type HomeProps = {
-  popularMovies: any[];
-  topRatedMovies: any[];
-  nowPlayingMovies: any[];
-  upcomingMovies: any[];
-  isLoggedIn: boolean;
-};
-
-type CategoryKey = "popular" | "top_rated" | "now_playing" | "upcoming";
-
-const SKELETON_COUNT = 4;
-
-function SkeletonCard() {
-  return (
-    <div className="w-40 flex-shrink-0 animate-pulse md:w-48">
-      <div className="aspect-[2/3] rounded-xl bg-neutral-800" />
+export function MovieSkeletons() {
+  return <>{Array.from({ length: 6 }, (_, index) => (
+    <div key={index} className="w-[152px] shrink-0 space-y-3 md:w-[192px]" aria-hidden="true">
+      <div className="aspect-[2/3] animate-pulse rounded-xl bg-neutral-900" />
+      <div className="h-3 w-3/4 animate-pulse rounded bg-neutral-900" />
+      <div className="h-3 w-1/2 animate-pulse rounded bg-neutral-900" />
     </div>
+  ))}</>;
+}
+
+function MovieCard({ movie }: { movie: Movie }) {
+  return <Link href={`/movies/${movie.id}`} className="movie-card group block w-[152px] shrink-0 snap-start md:w-[192px]">
+    <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/5 bg-neutral-900">
+      <MovieImage path={movie.poster_path} title={movie.title} />
+    </div>
+    <h3 className="mt-3 line-clamp-2 text-sm font-medium leading-5 group-hover:text-white">{movie.title}</h3>
+    <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+      <span>{movie.release_date?.slice(0, 4) || "Release TBD"}</span>
+      <span className="flex items-center gap-1"><Star size={12} weight="fill" className="text-amber-400" aria-hidden="true" />
+        <span aria-label={movie.vote_average > 0 ? `Rated ${movie.vote_average.toFixed(1)} out of 10` : "Not yet rated"}>
+          {movie.vote_average > 0 ? movie.vote_average.toFixed(1) : "Not rated"}
+        </span>
+      </span>
+    </div>
+  </Link>;
+}
+
+function MovieRow({ title, description, initial, category, history = false }: {
+  title: string; description: string; initial: CatalogSection; category?: CategoryKey; history?: boolean;
+}) {
+  const rowId = useId();
+  const rail = useRef<HTMLDivElement>(null);
+  const [data, setData] = useState(initial);
+  const [loading, setLoading] = useState(false);
+  const [edges, setEdges] = useState({ start: true, end: false });
+  const inFlight = useRef(false);
+  const drag = useRef({ active: false, moved: false, x: 0, scroll: 0 });
+  const [dragging, setDragging] = useState(false);
+  const hasMore = !!category && data.page < data.total_pages;
+  const measure = useCallback(() => {
+    const element = rail.current;
+    if (element) setEdges({
+      start: element.scrollLeft < 4,
+      end: element.scrollWidth - element.clientWidth - element.scrollLeft < 4,
+    });
+  }, []);
+  useEffect(() => {
+    const element = rail.current;
+    if (!element) return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    for (const child of element.children) observer.observe(child);
+    return () => observer.disconnect();
+  }, [measure, data.results.length, loading]);
+  async function loadMore() {
+    if (!category || inFlight.current || (!hasMore && !data.error)) return;
+    inFlight.current = true; setLoading(true);
+    try {
+      const response = await fetch(`/api/movies?category=${category}&page=${data.page + 1}`);
+      if (!response.ok) throw new Error("Movies couldn't load. Please try again.");
+      const next: MoviePage = await response.json();
+      setData((current) => ({ ...next, results: mergeMovies(current.results, next.results) }));
+    } catch {
+      setData((current) => ({ ...current, error: "Movies couldn't load. Your place is saved; try again." }));
+    } finally { inFlight.current = false; setLoading(false); }
+  }
+  function scroll(direction: number) {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    rail.current?.scrollBy({ left: direction * rail.current.clientWidth * 0.85, behavior: reduceMotion ? "instant" : "smooth" });
+  }
+  function pointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+    drag.current = { active: true, moved: false, x: event.clientX, scroll: event.currentTarget.scrollLeft };
+  }
+  function pointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (!drag.current.active) return;
+    const distance = event.clientX - drag.current.x;
+    if (Math.abs(distance) > 8) {
+      if (!drag.current.moved) {
+        drag.current.moved = true;
+        event.currentTarget.setPointerCapture(event.pointerId);
+        setDragging(true);
+      }
+      event.preventDefault();
+      event.currentTarget.scrollLeft = drag.current.scroll - distance;
+    }
+  }
+  function pointerUp() { drag.current.active = false; setDragging(false); }
+  return (
+    <section id={history ? "history" : undefined} aria-labelledby={`${rowId}-heading`} className="scroll-mt-24 py-7 md:py-9">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <h2 id={`${rowId}-heading`} className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        </div>
+        {data.results.length > 0 && <div className="hidden shrink-0 gap-2 md:flex">
+          <button className="icon-button" aria-label={`Previous movies in ${title}`} aria-controls={rowId} disabled={edges.start} onClick={() => scroll(-1)}><ArrowLeft size={18} /></button>
+          <button className="icon-button" aria-label={`Next movies in ${title}`} aria-controls={rowId} disabled={edges.end} onClick={() => scroll(1)}><ArrowRight size={18} /></button>
+        </div>}
+      </div>
+      {data.results.length === 0 && !loading && !data.error ? (
+        <div className="rounded-xl border border-dashed border-border px-6 py-8">
+          {history ? <CheckCircle size={28} className="mb-3 text-muted-foreground" aria-hidden="true" /> : <FilmSlate size={28} className="mb-3 text-muted-foreground" aria-hidden="true" />}
+          <p className="font-medium">{history ? "Your movie story starts here" : "No movies to show just yet"}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{history ? "Mark a movie as watched to start your history." : "Check back soon, or browse another category."}</p>
+          {history && <a href="#browse" className="button button-secondary mt-4">Find a movie <ArrowRight size={16} aria-hidden="true" /></a>}
+        </div>
+      ) : null}
+      <div id={rowId} ref={rail} aria-busy={loading}
+        className={`movie-rail flex gap-4 overflow-x-auto pb-3 ${dragging ? "dragging" : ""}`}
+        onScroll={() => {
+          measure();
+          const element = rail.current;
+          if (element && element.scrollWidth - element.scrollLeft - element.clientWidth < 280 && !data.error) void loadMore();
+        }}
+        onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}
+        onLostPointerCapture={pointerUp}
+        onPointerLeave={() => { if (!drag.current.moved) pointerUp(); }}
+        onDragStart={(event) => event.preventDefault()}
+        onClickCapture={(event) => { if (drag.current.moved && event.detail !== 0) { event.preventDefault(); event.stopPropagation(); } }}>
+        {data.results.map((movie) => <MovieCard key={movie.id} movie={movie} />)}
+        {loading && <MovieSkeletons />}
+      </div>
+      {data.error && <div role="alert" className="notice notice-error mt-3 flex flex-wrap items-center justify-between gap-3">
+        <p>{data.error}</p><button className="button button-secondary" onClick={() => void loadMore()} disabled={loading}>Try again</button>
+      </div>}
+      {!data.error && hasMore && <button className="button button-secondary mt-3" onClick={() => void loadMore()} disabled={loading}>
+        {loading ? "Loading movies…" : "Load more"} {!loading && <ArrowRight size={16} aria-hidden="true" />}
+      </button>}
+      <span role="status" className="sr-only">{loading ? `Loading ${title}` : `${data.results.length} movies in ${title}`}</span>
+    </section>
   );
 }
 
-export default function HomeRows({
-  popularMovies: initialPopular,
-  topRatedMovies: initialTopRated,
-  nowPlayingMovies: initialNowPlaying,
-  upcomingMovies: initialUpcoming,
-  isLoggedIn,
-}: HomeProps) {
-  const router = useRouter();
-
-  const [popular, setPopular] = useState(initialPopular ?? []);
-  const [topRated, setTopRated] = useState(initialTopRated ?? []);
-  const [nowPlaying, setNowPlaying] = useState(initialNowPlaying ?? []);
-  const [upcoming, setUpcoming] = useState(initialUpcoming ?? []);
-
-  const [popularPage, setPopularPage] = useState(1);
-  const [topRatedPage, setTopRatedPage] = useState(1);
-  const [nowPlayingPage, setNowPlayingPage] = useState(1);
-  const [upcomingPage, setUpcomingPage] = useState(1);
-
-  const [popularLoading, setPopularLoading] = useState(false);
-  const [topRatedLoading, setTopRatedLoading] = useState(false);
-  const [nowPlayingLoading, setNowPlayingLoading] = useState(false);
-  const [upcomingLoading, setUpcomingLoading] = useState(false);
-
-  const [popularHasMore, setPopularHasMore] = useState(
-    (initialPopular ?? []).length >= 20,
-  );
-  const [topRatedHasMore, setTopRatedHasMore] = useState(
-    (initialTopRated ?? []).length >= 20,
-  );
-  const [nowPlayingHasMore, setNowPlayingHasMore] = useState(
-    (initialNowPlaying ?? []).length >= 20,
-  );
-  const [upcomingHasMore, setUpcomingHasMore] = useState(
-    (initialUpcoming ?? []).length >= 20,
-  );
-
-  const [watchHistory, setWatchHistory] = useState<any[]>([]);
-  const [watchHistoryLoading, setWatchHistoryLoading] = useState(false);
-  const [watchHistoryError, setWatchHistoryError] = useState(false);
-
-  const [dragState, setDragState] = useState({
-    isDragging: false,
-    startX: 0,
-    scrollLeft: 0,
-    hasMoved: false,
-  });
-
-  const handleMouseDown = useCallback((e: MouseEvent<HTMLDivElement>) => {
-    const container = e.currentTarget;
-    setDragState({
-      isDragging: true,
-      startX: e.pageX - container.offsetLeft,
-      scrollLeft: container.scrollLeft,
-      hasMoved: false,
-    });
-  }, []);
-
-  const handleMouseMove = useCallback(
-    (e: MouseEvent<HTMLDivElement>) => {
-      if (!dragState.isDragging) return;
-      e.preventDefault();
-      const container = e.currentTarget;
-      const x = e.pageX - container.offsetLeft;
-      const walk = (x - dragState.startX) * 1;
-      container.scrollLeft = dragState.scrollLeft - walk;
-      if (Math.abs(walk) > 5 && !dragState.hasMoved) {
-        setDragState((prev) => ({ ...prev, hasMoved: true }));
-      }
-    },
-    [dragState.isDragging, dragState.startX, dragState.scrollLeft, dragState.hasMoved],
-  );
-
-  const handleMouseUp = useCallback(() => {
-    setDragState((prev) => ({ ...prev, isDragging: false }));
-  }, []);
-
-  // Load watch history
+function WatchHistory() {
+  const [history, setHistory] = useState<Movie[] | null>(null);
+  const [error, setError] = useState("");
+  const [version, setVersion] = useState(0);
   useEffect(() => {
-    if (!isLoggedIn) return;
-    let cancelled = false;
-
-    async function loadWatchHistory() {
-      setWatchHistoryLoading(true);
+    const controller = new AbortController();
+    async function load() {
       try {
-        const response = await fetch("/api/movies/watched");
-        if (!response.ok) throw new Error("Failed to fetch watch history");
-        const data = await response.json();
-        if (!cancelled) {
-          setWatchHistory(data.results ?? []);
-          setWatchHistoryError(false);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error(
-            "Failed to load watch history:",
-            error instanceof Error ? error.message : "Unknown error",
-          );
-          setWatchHistoryError(true);
-        }
-      } finally {
-        if (!cancelled) setWatchHistoryLoading(false);
+        const response = await fetch("/api/movies/watched", { cache: "no-store", signal: controller.signal });
+        if (!response.ok) throw new Error("History unavailable");
+        const data: WatchedResponse = await response.json();
+        if (!controller.signal.aborted) { setHistory(data.results); setError(""); }
+      } catch {
+        if (!controller.signal.aborted) setError("Your watch history couldn't load. Please try again.");
       }
     }
-
-    loadWatchHistory();
-    return () => {
-      cancelled = true;
-    };
-  }, [isLoggedIn]);
-
-  const fetchMoreMovies = async (category: CategoryKey) => {
-    const stateMap: Record<
-      CategoryKey,
-      {
-        loading: boolean;
-        page: number;
-        setLoading: (v: boolean) => void;
-        setPage: (v: number) => void;
-        setMovies: (v: any[]) => void;
-        hasMore: boolean;
-        setHasMore: (v: boolean) => void;
-        movies: any[];
-      }
-    > = {
-      popular: {
-        loading: popularLoading,
-        page: popularPage,
-        setLoading: setPopularLoading,
-        setPage: setPopularPage,
-        setMovies: setPopular,
-        hasMore: popularHasMore,
-        setHasMore: setPopularHasMore,
-        movies: popular,
-      },
-      top_rated: {
-        loading: topRatedLoading,
-        page: topRatedPage,
-        setLoading: setTopRatedLoading,
-        setPage: setTopRatedPage,
-        setMovies: setTopRated,
-        hasMore: topRatedHasMore,
-        setHasMore: setTopRatedHasMore,
-        movies: topRated,
-      },
-      now_playing: {
-        loading: nowPlayingLoading,
-        page: nowPlayingPage,
-        setLoading: setNowPlayingLoading,
-        setPage: setNowPlayingPage,
-        setMovies: setNowPlaying,
-        hasMore: nowPlayingHasMore,
-        setHasMore: setNowPlayingHasMore,
-        movies: nowPlaying,
-      },
-      upcoming: {
-        loading: upcomingLoading,
-        page: upcomingPage,
-        setLoading: setUpcomingLoading,
-        setPage: setUpcomingPage,
-        setMovies: setUpcoming,
-        hasMore: upcomingHasMore,
-        setHasMore: setUpcomingHasMore,
-        movies: upcoming,
-      },
-    };
-
-    const entry = stateMap[category];
-    if (!entry || entry.loading || !entry.hasMore) return;
-
-    entry.setLoading(true);
-    const nextPage = entry.page + 1;
-
-    try {
-      const response = await fetch(
-        `/api/movies?category=${category}&page=${nextPage}`,
-      );
-      if (!response.ok) throw new Error("Failed to load more movies.");
-
-      const data = await response.json();
-      const results = Array.isArray(data.results) ? data.results : [];
-      if (results.length === 0) {
-        entry.setHasMore(false);
-        return;
-      }
-
-      entry.setMovies([...entry.movies, ...results]);
-      entry.setPage(nextPage);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      entry.setLoading(false);
-    }
-  };
-
-  const handleScroll =
-    (category: CategoryKey) => async (e: UIEvent<HTMLDivElement>) => {
-      const target = e.currentTarget;
-      if (
-        target.scrollWidth - target.scrollLeft - target.clientWidth <
-        320
-      ) {
-        await fetchMoreMovies(category);
-      }
-    };
-
-  const handleClick = useCallback(
-    (movie: any) => (_e: MouseEvent<HTMLDivElement>) => {
-      if (dragState.hasMoved) return;
-      router.push(`/movies/${movie.id}`);
-    },
-    [dragState.hasMoved, router],
-  );
-
-  const renderRow = (
-    title: string,
-    movies: any[],
-    category: CategoryKey | null,
-    loading: boolean,
-    error?: boolean,
-  ) => (
-    <section className="space-y-4 px-6 py-8 md:py-12">
-      <div className="mx-auto max-w-7xl">
-        <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
-          {title}
-        </h2>
-      </div>
-
-      {error ? (
-        <p className="mx-auto max-w-7xl text-sm text-red-400">
-          Failed to load. Try refreshing the page.
-        </p>
-      ) : movies.length === 0 && !loading ? (
-        <p className="mx-auto max-w-7xl text-sm text-muted-foreground">
-          Nothing here yet.
-        </p>
-      ) : (
-        <div
-          className="scrollbar-hide mx-auto flex max-w-7xl gap-3 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing md:gap-4"
-          onScroll={category ? handleScroll(category) : undefined}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-        >
-          {movies?.map((movie: any, i: number) => (
-            <div
-              key={`${category ?? "watch"}-${movie.id ?? i}-${i}`}
-              className="group relative w-40 flex-shrink-0 cursor-pointer transition-transform duration-300 hover:scale-[1.04] active:scale-[0.98] md:w-48"
-              onClick={handleClick(movie)}
-            >
-              <div className="aspect-[2/3] overflow-hidden rounded-xl bg-neutral-800">
-                {movie.poster_path ? (
-                  <Image
-                    src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                    alt={movie.title ?? "Movie poster"}
-                    width={200}
-                    height={300}
-                    draggable={false}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-                    No poster
-                  </div>
-                )}
-              </div>
-              {/* Title overlay on hover */}
-              <div className="pointer-events-none absolute inset-0 flex items-end rounded-xl bg-gradient-to-t from-black/80 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <span className="text-xs font-medium text-white line-clamp-2">
-                  {movie.title}
-                </span>
-              </div>
-            </div>
-          ))}
-
-          {loading &&
-            Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <SkeletonCard key={`skeleton-${i}`} />
-            ))}
-        </div>
-      )}
-    </section>
-  );
-
-  const renderLoadingRow = (title: string) => (
-    <section className="space-y-4 px-6 py-8 md:py-12">
-      <div className="mx-auto max-w-7xl">
-        <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
-          {title}
-        </h2>
-      </div>
-      <div className="mx-auto flex max-w-7xl gap-3 overflow-hidden md:gap-4">
-        {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-          <SkeletonCard key={`skeleton-${i}`} />
-        ))}
-      </div>
-    </section>
-  );
-
-  return (
-    <div>
-      {isLoggedIn &&
-        watchHistoryLoading &&
-        renderLoadingRow("Watch History")}
-
-      {isLoggedIn &&
-        !watchHistoryLoading &&
-        watchHistory.length > 0 &&
-        renderRow(
-          "Watch History",
-          watchHistory,
-          null,
-          false,
-          watchHistoryError,
-        )}
-
-      {isLoggedIn &&
-        !watchHistoryLoading &&
-        watchHistory.length === 0 &&
-        !watchHistoryError &&
-        renderRow("Watch History", [], null, false)}
-
-      {renderRow("Popular Movies", popular, "popular", popularLoading)}
-      {renderRow("Top Rated", topRated, "top_rated", topRatedLoading)}
-      {renderRow(
-        "Now Playing",
-        nowPlaying,
-        "now_playing",
-        nowPlayingLoading,
-      )}
-      {renderRow("Upcoming", upcoming, "upcoming", upcomingLoading)}
+    void load();
+    return () => controller.abort();
+  }, [version]);
+  useEffect(() => {
+    const refresh = () => { setHistory(null); setVersion((value) => value + 1); };
+    window.addEventListener("watch-history-changed", refresh);
+    return () => window.removeEventListener("watch-history-changed", refresh);
+  }, []);
+  if (error) return <section id="history" className="scroll-mt-24 py-8">
+    <h2 className="mb-4 text-xl font-semibold">Your watch history</h2>
+    <div className="notice notice-error flex flex-wrap items-center justify-between gap-3">
+      <p role="alert">{error}</p>
+      <button className="button button-secondary" onClick={() => { setError(""); setHistory(null); setVersion((value) => value + 1); }}>Try again</button>
     </div>
-  );
+  </section>;
+  if (history === null) return <section id="history" className="scroll-mt-24 py-8" aria-busy="true">
+    <h2 className="mb-5 text-xl font-semibold">Your watch history</h2>
+    <div className="flex gap-4 overflow-hidden"><MovieSkeletons /></div>
+    <span role="status" className="sr-only">Loading watch history</span>
+  </section>;
+  return <MovieRow key={version} title="Your watch history" description="The movies you've already made time for." history initial={{ results: history, page: 1, total_pages: 1 }} />;
+}
+
+export default function HomeRows({ catalog }: { catalog: MovieCatalog }) {
+  const { username } = useAuth();
+  return <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
+    {username && <WatchHistory key={username} />}
+    <div id="browse" className="scroll-mt-24">
+      {categories.map(({ key, title, description }) => <MovieRow key={key} category={key} title={title} description={description} initial={catalog[key]} />)}
+    </div>
+  </div>;
 }

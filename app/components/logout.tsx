@@ -1,33 +1,23 @@
-'use client';
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
+"use client";
+import { useRef, useState } from "react";
+import { useAuth } from "./authProvider";
 export default function Logout() {
-    const router = useRouter();
-    const [error, setError] = useState("");
-
-    async function handleLogout() {
-        setError("");
-        try {
-            const response = await fetch("/api/auth/logout", {
-                method: "POST",
-            });
-            if (!response.ok) {
-                setError("Logout failed. Please try again.");
-                return;
-            }
-            router.refresh();
-        } catch {
-            setError("Network error. Please try again.");
-        }
-    }
-
-    return (
-        <div className="flex items-center gap-2">
-            {error && <span className="text-sm text-red-400">{error}</span>}
-            <button onClick={handleLogout} className="hover:text-gray-300">
-                Logout
-            </button>
-        </div>
-    );
+  const { signOut } = useAuth();
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+  const inFlight = useRef(false);
+  async function logout() {
+    if (inFlight.current) return;
+    inFlight.current = true; setPending(true); setError("");
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      if (!response.ok) throw new Error("Logout failed. Please try again.");
+      signOut();
+    } catch { setError("Couldn't log out. Try again."); }
+    finally { inFlight.current = false; setPending(false); }
+  }
+  return <div className="relative">
+    <button onClick={logout} className="button button-ghost" disabled={pending}>{pending ? "Logging out…" : "Log out"}</button>
+    {error && <p role="alert" className="absolute right-0 top-full mt-2 w-52 rounded-lg border border-border bg-neutral-900 p-3 text-sm text-red-300">{error}</p>}
+  </div>;
 }

@@ -1,22 +1,13 @@
 import { NextResponse } from "next/server";
 import { fetchTmdbMovies } from "../../lib/tmdb";
-
-const categoryEndpoints: Record<string, string> = {
-  popular: "movie/popular",
-  top_rated: "movie/top_rated",
-  now_playing: "movie/now_playing",
-  upcoming: "movie/upcoming",
-};
-
+import { isCategory } from "../../lib/catalog";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const category = url.searchParams.get("category");
-  const page = Number(url.searchParams.get("page") || "1");
-
-  if (!category || !categoryEndpoints[category]) {
-    return NextResponse.json({ error: "Invalid category." }, { status: 400 });
+  const page = Number(url.searchParams.get("page") ?? "1");
+  if (!isCategory(category) || !Number.isInteger(page) || page < 1 || page > 500) {
+    return NextResponse.json({ message: "Choose a valid category and page (1–500)." }, { status: 400 });
   }
-
-  const results = await fetchTmdbMovies(categoryEndpoints[category], page);
-  return NextResponse.json({ results });
+  try { return NextResponse.json(await fetchTmdbMovies(category, page)); }
+  catch { return NextResponse.json({ message: "Movies couldn't load. Please try again." }, { status: 502 }); }
 }

@@ -1,74 +1,97 @@
 "use client";
-
-import { useState } from "react";
-import Image from "next/image";
-import { useParams } from "next/navigation";
-import { useEffect } from "react";
-
-export default function WatchButton() {
-    const [watched, setWatched] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const params = useParams();
-
-    // Load initial watched state
-    useEffect(() => {
-        async function loadWatchStatus() {
-            try {
-                const response = await fetch("/api/movies/watched");
-                if (!response.ok) return;
-                const data = await response.json();
-                const isWatched = data.results.some(
-                    (movie: any) => movie.id.toString() === params.id
-                );
-                setWatched(isWatched);
-            } catch (error) {
-                console.error("Failed to load watch status:", error instanceof Error ? error.message : "Unknown error");
-            }
-        }
-        loadWatchStatus();
-    }, [params.id]);
-
-    async function handleClicked() {
-        const newWatch = !watched;
-        setWatched(!watched);
-        setError(null);
-
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle, PlusCircle } from "@phosphor-icons/react";
+import { useAuth } from "./authProvider";
+export default function WatchButton({ movieId }: { movieId: number }) {
+  return <WatchControl key={movieId} movieId={movieId} />;
+}
+function WatchControl({ movieId }: { movieId: number }) {
+  const { username, requestAuth } = useAuth();
+  const [watchState, setWatchState] = useState({ username, watched: false, ready: !username });
+  const watched = watchState.username === username && !!username && watchState.watched;
+  const loading = !!username && (watchState.username !== username || !watchState.ready);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
+  const [version, setVersion] = useState(0);
+  const inFlight = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    const controller = new AbortController();
+    if (username) {
+      void (async () => {
         try {
-            const response = await fetch("/api/users", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ movieId: params.id, completed: newWatch }),
-            });
-
-            if (!response.ok) {
-                setError("Failed to update. Please try again.");
-                setWatched(!newWatch);
-                return;
+          const response = await fetch(`/api/movies/watched?movieId=${movieId}`, { cache: "no-store", signal: controller.signal });
+          if (response.status === 401) {
+            if (!controller.signal.aborted) {
+              setWatchState({ username, watched: false, ready: true });
+              setError("Your session has ended. Log in to continue.");
             }
-
-            const data = await response.json();
-            console.log(data);
-        } catch (error) {
-            setWatched(!newWatch);
-            setError("Network error. Please try again.");
-            console.error("Watch toggle failed:", error instanceof Error ? error.message : "Unknown error");
+            return;
+          }
+          if (!response.ok) throw new Error("Status unavailable");
+          const data: { watched: boolean } = await response.json();
+          if (!controller.signal.aborted && !inFlight.current) {
+            setWatchState({ username, watched: data.watched, ready: true });
+            setError((current) => current.startsWith("Your change") ? current : "");
+          }
+        } catch {
+          if (!controller.signal.aborted) {
+            setWatchState({ username, watched: false, ready: true });
+            setError("Couldn't check your watched status. Please try again.");
+          }
         }
+      })();
     }
-
-    return (
-        <div className="flex flex-col items-center justify-center gap-2">
-            {error && <p className="text-sm text-red-400">{error}</p>}
-            <button
-                className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg ${
-                    !watched && "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 active:scale-95"
-                }`}
-                onClick={handleClicked}
-            >
-                <div className="flex items-center gap-2">
-                    {watched && <Image src="/checkmark.svg" alt="Watched" width={40} height={40} />}
-                    <span>{!watched && "Watched"}</span>
-                </div>
-            </button>
-        </div>
-    );
+    return () => { mounted.current = false; controller.abort(); };
+  }, [username, movieId, version]);
+  async function save(completed: boolean) {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    const previous = watchState;
+    setWatchState({ username, watched: completed, ready: true });
+    setSaving(true); setError(""); setStatus("");
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ movieId, completed }),
+      });
+      if (response.status === 401) {
+        if (mounted.current) { setWatchState(previous); setStatus("Log in to save this movie."); }
+        requestAuth(() => save(completed));
+        return;
+      }
+      if (!response.ok) throw new Error("Save failed");
+      window.dispatchEvent(new Event("watch-history-changed"));
+      if (mounted.current) setStatus(completed ? "Added to your watch history." : "Removed from your watch history.");
+    } catch {
+      if (mounted.current) { setWatchState(previous); setError("Your change couldn't be saved. Please try again."); }
+    } finally {
+      inFlight.current = false;
+      if (mounted.current) {
+        setSaving(false);
+        // Reconcile both successes and rollbacks with the current account after login.
+        setVersion((value) => value + 1);
+      }
+    }
+  }
+  function click() {
+    if (!username || error.startsWith("Your session")) { requestAuth(() => save(true)); return; }
+    void save(!watched);
+  }
+  const statusUnavailable = error.startsWith("Couldn't check");
+  return <div className="space-y-3">
+    <button type="button" className={`button min-w-56 ${watched ? "button-secondary" : "button-primary"}`}
+      disabled={loading || saving || statusUnavailable} aria-pressed={watched} aria-busy={loading || saving} onClick={click}>
+      {watched ? <CheckCircle size={20} weight="fill" aria-hidden="true" /> : <PlusCircle size={20} aria-hidden="true" />}
+      {saving ? "Saving…" : loading ? "Checking watched status…" : watched ? "Watched — undo" : "Mark as watched"}
+    </button>
+    {!username && <p className="text-xs text-muted-foreground">Log in when you&apos;re ready to save your history.</p>}
+    {error && <div className="flex flex-wrap items-center gap-3">
+      <p role="alert" className="text-sm text-red-300">{error}</p>
+      {statusUnavailable && <button className="button button-secondary" onClick={() => { setWatchState({ username, watched, ready: false }); setError(""); setVersion((value) => value + 1); }}>Try again</button>}
+    </div>}
+    <p role="status" aria-live="polite" className="min-h-5 text-sm text-muted-foreground">{status}</p>
+  </div>;
 }

@@ -1,38 +1,19 @@
-import { login } from "../../../lib/db";
-import { createSession } from "../../../lib/session";
-
+import { NextResponse } from "next/server";
+import { login } from "@/app/lib/db";
+import { createSession } from "@/app/lib/session";
+import { validateCredentials } from "@/app/lib/validation";
 export async function POST(request: Request) {
-    try {
-        const { username, password } = await request.json();
-
-        if (!username || !password) {
-            return new Response(
-                JSON.stringify({ message: "Missing username or password." }),
-                { status: 400 }
-            );
-        }
-
-        const userId = await login(username, password);
-        if (userId) {
-            await createSession(userId, username);
-        }
-
-        return new Response(
-            JSON.stringify({ message: "Login successful." }),
-            { status: 200 }
-        );
-    } catch (error) {
-        if (error instanceof Error && error.message === "INVALID_CREDENTIALS") {
-            return new Response(
-                JSON.stringify({ message: "Invalid username or password." }),
-                { status: 401 }
-            );
-        }
-
-        console.error("Login error:", error instanceof Error ? error.message : "Unknown error");
-        return new Response(
-            JSON.stringify({ message: "Login failed. Please try again later." }),
-            { status: 500 }
-        );
+  try {
+    const credentials = validateCredentials(await request.json().catch(() => null));
+    if (!credentials) return NextResponse.json({ message: "Enter a username (up to 100 characters) and password (up to 72 bytes)." }, { status: 400 });
+    const userId = await login(credentials.username, credentials.password);
+    await createSession(userId, credentials.username);
+    return NextResponse.json({ message: "Login successful." });
+  } catch (error) {
+    if (error instanceof Error && error.message === "INVALID_CREDENTIALS") {
+      return NextResponse.json({ message: "Invalid username or password." }, { status: 401 });
     }
+    console.error("Login failed:", error instanceof Error ? error.message : "Unknown error");
+    return NextResponse.json({ message: "Login couldn't complete. Please try again." }, { status: 503 });
+  }
 }
