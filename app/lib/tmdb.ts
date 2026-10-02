@@ -19,6 +19,12 @@ export async function fetchTmdbMovies(category: CategoryKey, page = 1): Promise<
   if (!Array.isArray(data.results) || !Number.isInteger(data.total_pages)) throw new Error("Invalid movie catalog response");
   return filterMoviePage({ ...data, total_pages: Math.min(data.total_pages, 500) }, category);
 }
+export async function searchTmdbMovies(query: string, page = 1): Promise<MoviePage> {
+  const params = new URLSearchParams({ query, page: String(page), language: "en-US", include_adult: "false" });
+  const data = await fetchTmdb<MoviePage>(`search/movie?${params}`);
+  if (!Array.isArray(data.results) || !Number.isInteger(data.total_pages)) throw new Error("Invalid movie search response");
+  return { ...data, total_pages: Math.min(data.total_pages, 500) };
+}
 export async function fetchMovieDetails(movieId: string): Promise<MovieDetails | null> {
   try { return await fetchTmdb<MovieDetails>(`movie/${movieId}?language=en-US`); }
   catch (error) {

@@ -48,6 +48,63 @@ before(async () => {
 }, { timeout: 30000 });
 after(async () => { await browser?.close(); });
 
+test("header search submits encoded titles, paginates, and preserves the query", async () => {
+  mock = {};
+  await navigate("/");
+  await fill(browser, "#movie-search", "  Wall-E & friends  ");
+  await key(browser, "Enter");
+  await waitFor(browser, `location.pathname === '/search' && document.querySelector('.movie-card')?.textContent.includes('Wall-E & friends result 1')`);
+  assert.equal(await browser.evaluate(`new URLSearchParams(location.search).get('q')`), "Wall-E & friends");
+  assert.equal(await browser.evaluate(`document.querySelector('#movie-search').value`), "Wall-E & friends");
+  await click(browser, 'nav[aria-label="Search results pages"] a:last-child');
+  await waitFor(browser, `document.querySelector('.movie-card')?.textContent.includes('result 2')`);
+  await click(browser, 'nav[aria-label="Search results pages"] a:first-child');
+  await waitFor(browser, `document.querySelector('.movie-card')?.textContent.includes('result 1')`);
+  await navigate("/search?q=Wall-E%20%26%20friends");
+  assert.equal(await browser.evaluate(`document.querySelector('#movie-search').value`), "Wall-E & friends");
+  await click(browser, '.movie-card');
+  await waitFor(browser, `location.pathname === '/movies/1'`);
+  await browser.command("Page.navigateToHistoryEntry", { entryId: (await browser.command("Page.getNavigationHistory")).entries.at(-2).id });
+  await waitFor(browser, `location.pathname === '/search' && document.querySelector('#movie-search').value === 'Wall-E & friends'`);
+});
+
+test("search handles empty queries, no matches, failures, and invalid pages", async () => {
+  mock = {};
+  await navigate("/search");
+  assert.ok(await browser.evaluate(`document.body.textContent.includes('Enter a movie title')`));
+  await fill(browser, "#movie-search", "   ");
+  await click(browser, 'button[aria-label="Search movies"]');
+  assert.equal(await browser.evaluate(`location.search`), "");
+  await fill(browser, "#movie-search", "no matches");
+  await click(browser, 'button[aria-label="Search movies"]');
+  await waitFor(browser, `document.body.textContent.includes('No movies found')`);
+  await navigate("/search?q=unavailable");
+  assert.ok(await browser.evaluate(`document.querySelector('[role="alert"]').textContent.includes("couldn't load")`));
+  await click(browser, '[role="alert"] a');
+  await waitFor(browser, `document.querySelector('[role="alert"]')`);
+  for (const page of ["0", "1.5", "501", "invalid"]) {
+    await navigate(`/search?q=movie&page=${page}`);
+    assert.ok(await browser.evaluate(`document.querySelector('.movie-card').textContent.includes('result 1')`));
+  }
+});
+
+test("search header fits guest and signed-in layouts at all screen sizes", async () => {
+  mock = { history: () => ({ body: { results: [] } }) };
+  for (const username of [null, "movie-lover"]) {
+    for (const width of [375, 768, 1440]) {
+      await browser.command("Emulation.setDeviceMetricsOverride", { width, height: 1000, deviceScaleFactor: 1, mobile: width < 768 });
+      await navigate("/search?q=movie", username);
+      assert.equal(await browser.evaluate(`document.documentElement.scrollWidth > innerWidth`), false);
+      assert.ok(await browser.evaluate(`(() => { const input=document.querySelector('#movie-search').getBoundingClientRect(); const nav=document.querySelector('header nav').getBoundingClientRect(); return input.bottom <= nav.top || input.top >= nav.bottom || input.right <= nav.left; })()`));
+      await screenshot(browser, `test-results/search-${username ? 'signed-in' : 'guest'}-${width}.png`);
+      await navigate("/", username);
+      const target = username ? "history" : "browse";
+      await browser.evaluate(`document.querySelector('#${target}').scrollIntoView({behavior:'instant'})`);
+      assert.ok(await browser.evaluate(`document.querySelector('#${target}').getBoundingClientRect().top >= document.querySelector('header').getBoundingClientRect().bottom`));
+    }
+  }
+});
+
 test("catalog works at mobile, tablet, and desktop sizes with visible metadata", async () => {
   mock = {};
   for (const width of [375, 768, 1440]) {

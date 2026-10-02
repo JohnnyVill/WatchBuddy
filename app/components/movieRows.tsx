@@ -1,8 +1,7 @@
 "use client";
 import { useCallback, useEffect, useId, useRef, useState, type PointerEvent } from "react";
-import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle, FilmSlate, Star } from "@phosphor-icons/react";
-import MovieImage from "./movieImage";
+import { ArrowLeft, ArrowRight, CheckCircle, FilmSlate } from "@phosphor-icons/react";
+import MovieCard from "./movieCard";
 import { useAuth } from "./authProvider";
 import { categories, mergeMovies } from "../lib/catalog";
 import type { CatalogSection, CategoryKey, Movie, MovieCatalog, MoviePage, WatchedResponse } from "../lib/types";
@@ -15,23 +14,6 @@ export function MovieSkeletons() {
       <div className="h-3 w-1/2 animate-pulse rounded bg-neutral-900" />
     </div>
   ))}</>;
-}
-
-function MovieCard({ movie }: { movie: Movie }) {
-  return <Link href={`/movies/${movie.id}`} className="movie-card group block w-[152px] shrink-0 snap-start md:w-[192px]">
-    <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/5 bg-neutral-900">
-      <MovieImage path={movie.poster_path} title={movie.title} />
-    </div>
-    <h3 className="mt-3 line-clamp-2 text-sm font-medium leading-5 group-hover:text-white">{movie.title}</h3>
-    <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-      <span>{movie.release_date?.slice(0, 4) || "Release TBD"}</span>
-      <span className="flex items-center gap-1"><Star size={12} weight="fill" className="text-amber-400" aria-hidden="true" />
-        <span aria-label={movie.vote_average > 0 ? `Rated ${movie.vote_average.toFixed(1)} out of 10` : "Not yet rated"}>
-          {movie.vote_average > 0 ? movie.vote_average.toFixed(1) : "Not rated"}
-        </span>
-      </span>
-    </div>
-  </Link>;
 }
 
 function MovieRow({ title, description, initial, category, history = false }: {
@@ -96,7 +78,7 @@ function MovieRow({ title, description, initial, category, history = false }: {
   }
   function pointerUp() { drag.current.active = false; setDragging(false); }
   return (
-    <section id={history ? "history" : undefined} aria-labelledby={`${rowId}-heading`} className="scroll-mt-24 py-7 md:py-9">
+    <section id={history ? "history" : undefined} aria-labelledby={`${rowId}-heading`} className="scroll-mt-40 lg:scroll-mt-24 py-7 md:py-9">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
           <h2 id={`${rowId}-heading`} className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h2>
@@ -165,14 +147,14 @@ function WatchHistory() {
     window.addEventListener("watch-history-changed", refresh);
     return () => window.removeEventListener("watch-history-changed", refresh);
   }, []);
-  if (error) return <section id="history" className="scroll-mt-24 py-8">
+  if (error) return <section id="history" className="scroll-mt-40 lg:scroll-mt-24 py-8">
     <h2 className="mb-4 text-xl font-semibold">Your watch history</h2>
     <div className="notice notice-error flex flex-wrap items-center justify-between gap-3">
       <p role="alert">{error}</p>
       <button className="button button-secondary" onClick={() => { setError(""); setHistory(null); setVersion((value) => value + 1); }}>Try again</button>
     </div>
   </section>;
-  if (history === null) return <section id="history" className="scroll-mt-24 py-8" aria-busy="true">
+  if (history === null) return <section id="history" className="scroll-mt-40 lg:scroll-mt-24 py-8" aria-busy="true">
     <h2 className="mb-5 text-xl font-semibold">Your watch history</h2>
     <div className="flex gap-4 overflow-hidden"><MovieSkeletons /></div>
     <span role="status" className="sr-only">Loading watch history</span>
@@ -184,7 +166,7 @@ export default function HomeRows({ catalog }: { catalog: MovieCatalog }) {
   const { username } = useAuth();
   return <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
     {username && <WatchHistory key={username} />}
-    <div id="browse" className="scroll-mt-24">
+    <div id="browse" className="scroll-mt-40 lg:scroll-mt-24">
       {categories.map(({ key, title, description }) => <MovieRow key={key} category={key} title={title} description={description} initial={catalog[key]} />)}
     </div>
   </div>;

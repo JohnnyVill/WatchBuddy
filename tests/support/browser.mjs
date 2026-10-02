@@ -89,6 +89,7 @@ export async function fill(browser, selector, value) {
 }
 export async function key(browser, key, code = key) {
   await browser.command("Input.dispatchKeyEvent", { type: "keyDown", key, code, windowsVirtualKeyCode: key === "Tab" ? 9 : key === "Escape" ? 27 : key === "Enter" ? 13 : undefined });
+  if (key === "Enter") await browser.command("Input.dispatchKeyEvent", { type: "char", text: "\r", key, code, windowsVirtualKeyCode: 13 });
   await browser.command("Input.dispatchKeyEvent", { type: "keyUp", key, code });
 }
 export async function screenshot(browser, path) {

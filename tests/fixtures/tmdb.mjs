@@ -10,6 +10,12 @@ export async function startTmdbFixture(port = 0) {
     const url = new URL(request.url, "http://localhost");
     const page = Number(url.searchParams.get("page") || 1);
     response.setHeader("Content-Type", "application/json");
+    if (url.pathname === "/3/search/movie") {
+      const query = url.searchParams.get("query");
+      if (query === "unavailable") { response.writeHead(503); response.end(JSON.stringify({ message: "Unavailable" })); return; }
+      const results = query === "no matches" ? [] : [makeMovie(page, { title: `${query} result ${page}` })];
+      response.end(JSON.stringify({ results, page, total_pages: results.length ? 2 : 0 })); return;
+    }
     if (url.pathname === "/3/movie/503") { response.writeHead(503); response.end(JSON.stringify({ message: "Unavailable" })); return; }
     if (/\/movie\/(popular|top_rated|now_playing|upcoming)$/.test(url.pathname)) {
       const upcoming = url.pathname.endsWith("/upcoming");
